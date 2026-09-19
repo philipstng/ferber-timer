@@ -12,6 +12,7 @@ workflows:
           npm install
       - name: Add Android Platform
         script: |
+          npm run build
           npx cap add android
           npx cap sync android
       - name: Build Android App Bundle (.aab)

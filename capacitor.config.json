@@ -1,7 +1,7 @@
 {
   "appId": "com.ferbersleeptimer.babytracker",
   "appName": "Ferber Sleep Timer & Tracker",
-  "webDir": ".",
+  "webDir": "public",
   "bundledWebRuntime": false,
   "plugins": {
     "SplashScreen": {

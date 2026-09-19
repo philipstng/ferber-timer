@@ -1,18 +1,25 @@
 {
-  "name": "ferber-timer",
+  "name": "com.ferbersleeptimer.babytracker",
   "version": "1.0.0",
+  "description": "Simple Ferber Method timer and interval log for baby sleep training.",
+  "main": "index.html",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "npx cap copy android",
+    "sync": "npx cap sync android"
   },
+  "keywords": [
+    "ferber method timer",
+    "baby sleep training",
+    "sleep training timer",
+    "baby sleep tracker"
+  ],
+  "author": "Philco",
+  "license": "ISC",
   "dependencies": {
     "@capacitor/android": "^6.0.0",
-    "@capacitor/core": "^6.0.0",
-    "@capacitor/ios": "^6.0.0"
+    "@capacitor/core": "^6.0.0"
   },
   "devDependencies": {
-    "@capacitor/cli": "^6.0.0",
-    "vite": "^5.0.0"
+    "@capacitor/cli": "^6.0.0"
   }
 }

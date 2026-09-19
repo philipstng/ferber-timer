@@ -1,38 +1,44 @@
 workflows:
-  capacitor-ios-android:
-    name: Capacitor App Build
-    max_build_duration: 60
+  android-release:
+    name: Build Android App Bundle (.aab)
+    max_build_duration: 30
     instance_type: mac_mini_m1
     environment:
+      groups:
+        - google_play # Set up in Codemagic UI if using automated Play Store publishing
+      vars:
+        PACKAGE_NAME: "com.philco.ferbertimer"
       node: latest
-      xcode: latest
-      cocoapods: default
+      java: 17
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: 'main'
+          include: true
     scripts:
       - name: Install dependencies
         script: |
-          npm ci
+          npm install
 
-      - name: Build web assets
+      - name: Add and Sync Android Platform
         script: |
-          # Compiles web app into your webDir (e.g., dist or build)
-          npm run build
+          npx cap add android
+          npx cap sync android
 
-      - name: Capacitor Sync
-        script: |
-          # Copies web assets to native folders (ios/android) and updates plugins
-          npx cap sync
-
-      - name: Build Android APK (Optional)
+      - name: Build Android App Bundle (.aab)
         script: |
           cd android
-          ./gradlew assembleDebug
-
-      - name: Build iOS App (Optional)
-        script: |
-          cd ios/App
-          pod install
-          xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -sdk iphoneos build
+          ./gradlew bundleRelease
 
     artifacts:
-      - android/app/build/outputs/**/*.apk
-      - build/ios/ipa/*.ipa
+      - android/app/build/outputs/bundle/release/*.aab
+      - android/app/build/outputs/apk/release/*.apk
+
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com # Replace with your email to get build notifications
+        notify:
+          on_success: true
+          on_failure: true

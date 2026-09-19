@@ -1,6 +1,6 @@
 workflows:
   android-release:
-    name: Build Android App Bundle (.aab) & APK
+    name: Build Android App Bundle (.aab) & Debug APK
     max_build_duration: 30
     instance_type: mac_mini_m1
     environment:
@@ -31,14 +31,14 @@ workflows:
         script: |
           npx cap sync android
 
-      - name: Build Android App Bundle (.aab) and APK
+      - name: Build Android App Bundle (.aab) and Debug APK
         script: |
           cd android
-          ./gradlew bundleRelease assembleRelease
+          ./gradlew bundleRelease assembleDebug
 
     artifacts:
       - android/app/build/outputs/bundle/release/*.aab
-      - android/app/build/outputs/apk/release/*.apk
+      - android/app/build/outputs/apk/debug/*.apk
 
     publishing:
       email:

@@ -141,12 +141,14 @@
             border-radius: 50%;
             border: 8px solid #cbd5e1;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             background-color: #ffffff;
             box-shadow: 0 10px 25px rgba(0,0,0,0.05);
             transition: background-color 0.4s ease, border-color 0.4s ease;
             position: relative;
+            top: -25px; /* Shifted timer location up ~50px relative to middle */
         }
 
         .timer-circle.finished {
@@ -155,23 +157,36 @@
         }
 
         .timer-display {
-            font-size: 4rem;
+            font-size: 3.8rem;
             font-weight: 800;
             color: #1e293b;
             font-variant-numeric: tabular-nums;
+            line-height: 1;
         }
 
-        .timer-circle.finished .timer-display {
+        /* Logo Cursive Branding */
+        .brand-logo {
+            font-family: 'Brush Script MT', 'Comic Sans MS', 'Dancing Script', cursive;
+            font-size: 1.2rem;
+            color: #64748b;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        .timer-circle.finished .timer-display,
+        .timer-circle.finished .brand-logo {
             color: #ffffff;
         }
 
         /* Controls Section */
         .controls {
-            margin-top: 20px;
+            margin-top: 0px;
             display: flex;
             gap: 12px;
             width: 100%;
             max-width: 300px;
+            position: relative;
+            top: -15px;
         }
 
         .control-btn {
@@ -244,6 +259,7 @@
     <div class="middle-section">
         <div class="timer-circle" id="timerCircle">
             <div class="timer-display" id="timerDisplay">03:00</div>
+            <div class="brand-logo">by Philco</div>
         </div>
 
         <div class="controls">

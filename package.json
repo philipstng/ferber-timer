@@ -1,8 +1,8 @@
 {
   "name": "com.ferbersleeptimer.babytracker",
   "version": "1.0.0",
-  "description": "Simple Ferber Method timer and interval log for baby sleep training.",
-  "main": "index.html",
+  "description": "Track sleep training intervals easily. Simple Ferber method timer for parents.",
+  "main": "public/index.html",
   "scripts": {
     "build": "npx cap copy android",
     "sync": "npx cap sync android"

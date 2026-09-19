@@ -1,0 +1,6 @@
+{
+  "appId": "philco.ferbertimer",
+  "appName": "Ferber Timer",
+  "webDir": ".",
+  "bundledWebRuntime": false
+}

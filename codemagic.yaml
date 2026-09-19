@@ -1,23 +1,38 @@
 workflows:
-  android-workflow:
-    name: Build Android Release (.aab)
-    max_build_duration: 30
+  capacitor-ios-android:
+    name: Capacitor App Build
+    max_build_duration: 60
     instance_type: mac_mini_m1
     environment:
       node: latest
-      java: 17
+      xcode: latest
+      cocoapods: default
     scripts:
       - name: Install dependencies
         script: |
-          npm install
-      - name: Add Android Platform
+          npm ci
+
+      - name: Build web assets
         script: |
+          # Compiles web app into your webDir (e.g., dist or build)
           npm run build
-          npx cap add android
-          npx cap sync android
-      - name: Build Android App Bundle (.aab)
+
+      - name: Capacitor Sync
+        script: |
+          # Copies web assets to native folders (ios/android) and updates plugins
+          npx cap sync
+
+      - name: Build Android APK (Optional)
         script: |
           cd android
-          ./gradlew bundleRelease
+          ./gradlew assembleDebug
+
+      - name: Build iOS App (Optional)
+        script: |
+          cd ios/App
+          pod install
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -sdk iphoneos build
+
     artifacts:
-      - android/app/build/outputs/bundle/release/*.aab
+      - android/app/build/outputs/**/*.apk
+      - build/ios/ipa/*.ipa

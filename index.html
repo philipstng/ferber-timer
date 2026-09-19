@@ -27,15 +27,15 @@
             height: 100vh;
             max-width: 480px;
             margin: 0 auto;
-            padding: 12px;
+            padding: 16px;
             justify-content: space-between;
         }
 
-        /* TOP SECTION (~30% height) */
+        /* TOP SECTION */
         .top-section {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
 
         .header-row {
@@ -76,7 +76,7 @@
             font-size: 0.75rem;
             font-weight: 600;
             color: #666;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -123,32 +123,28 @@
             transform: scale(1.05);
         }
 
-        /* MIDDLE SECTION (~70% height) */
+        /* MIDDLE SECTION - Centered relative to screen height */
         .middle-section {
             flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            position: relative;
         }
 
         .timer-circle {
-            width: 70vw;
-            height: 70vw;
-            max-width: 300px;
-            max-height: 300px;
+            width: 68vw;
+            height: 68vw;
+            max-width: 280px;
+            max-height: 280px;
             border-radius: 50%;
             border: 8px solid #cbd5e1;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             background-color: #ffffff;
             box-shadow: 0 10px 25px rgba(0,0,0,0.05);
             transition: background-color 0.4s ease, border-color 0.4s ease;
-            position: relative;
-            top: -25px; /* Shifted timer location up ~50px relative to middle */
         }
 
         .timer-circle.finished {
@@ -164,37 +160,36 @@
             line-height: 1;
         }
 
-        /* Logo Cursive Branding */
-        .brand-logo {
-            font-family: 'Brush Script MT', 'Comic Sans MS', 'Dancing Script', cursive;
-            font-size: 1.2rem;
-            color: #64748b;
-            margin-top: 8px;
-            font-style: italic;
-        }
-
-        .timer-circle.finished .timer-display,
-        .timer-circle.finished .brand-logo {
+        .timer-circle.finished .timer-display {
             color: #ffffff;
         }
 
-        /* Controls Section */
+        /* Logo Cursive Branding - Located directly under the timer circle */
+        .brand-logo {
+            font-family: 'Brush Script MT', 'Comic Sans MS', 'Dancing Script', cursive;
+            font-size: 1.25rem;
+            color: #64748b;
+            margin-top: 14px;
+            font-style: italic;
+            letter-spacing: 0.5px;
+        }
+
+        /* BOTTOM SECTION / CONTROLS */
         .controls {
-            margin-top: 0px;
             display: flex;
             gap: 12px;
             width: 100%;
-            max-width: 300px;
-            position: relative;
-            top: -15px;
+            max-width: 320px;
+            margin: 0 auto;
+            padding-bottom: 8px;
         }
 
         .control-btn {
             flex: 1;
-            padding: 12px;
+            padding: 14px;
             border: none;
-            border-radius: 8px;
-            font-size: 1rem;
+            border-radius: 10px;
+            font-size: 1.05rem;
             font-weight: 700;
             cursor: pointer;
             color: white;
@@ -259,13 +254,14 @@
     <div class="middle-section">
         <div class="timer-circle" id="timerCircle">
             <div class="timer-display" id="timerDisplay">03:00</div>
-            <div class="brand-logo">by Philco</div>
         </div>
+        <div class="brand-logo">Minimal by Philco</div>
+    </div>
 
-        <div class="controls">
-            <button class="control-btn start-btn" id="startBtn" onclick="toggleTimer()">Start</button>
-            <button class="control-btn reset-btn" onclick="resetTimer()">Reset</button>
-        </div>
+    <!-- BOTTOM SECTION -->
+    <div class="controls">
+        <button class="control-btn start-btn" id="startBtn" onclick="toggleTimer()">Start</button>
+        <button class="control-btn reset-btn" onclick="resetTimer()">Reset</button>
     </div>
 </div>
 

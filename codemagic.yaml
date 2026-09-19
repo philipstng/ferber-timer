@@ -1,6 +1,6 @@
 workflows:
   android-release:
-    name: Build Android App Bundle (.aab)
+    name: Build Android App Bundle (.aab) & APK
     max_build_duration: 30
     instance_type: mac_mini_m1
     environment:
@@ -19,15 +19,22 @@ workflows:
         script: |
           npm install
 
-      - name: Add and Sync Android Platform
+      - name: Add Android Platform
         script: |
           npx cap add android
+
+      - name: Copy Web Assets (Build Step)
+        script: |
+          npm run build
+
+      - name: Sync Native Project
+        script: |
           npx cap sync android
 
-      - name: Build Android App Bundle (.aab)
+      - name: Build Android App Bundle (.aab) and APK
         script: |
           cd android
-          ./gradlew bundleRelease
+          ./gradlew bundleRelease assembleRelease
 
     artifacts:
       - android/app/build/outputs/bundle/release/*.aab

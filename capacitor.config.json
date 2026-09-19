@@ -1,6 +1,13 @@
 {
-  "appId": "philco.ferbertimer",
-  "appName": "Ferber Timer",
-  "webDir": ".",
-  "bundledWebRuntime": false
+  "appId": "com.ferbersleeptimer.babytracker",
+  "appName": "Ferber Sleep Timer & Tracker",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#1A1B2F",
+      "showSpinner": false
+    }
+  }
 }

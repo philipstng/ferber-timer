@@ -6,14 +6,9 @@ workflows:
     environment:
       vars:
         PACKAGE_NAME: "com.ferbersleeptimer.babytracker"
-      # Secure environment variables for keystore (set these up in CodeMagic UI)
-      secure:
-        - CM_KEYSTORE
-        - CM_KEYSTORE_PASSWORD
-        - CM_KEY_ALIAS
-        - CM_KEY_PASSWORD
       groups:
-        - google_play_credentials # Optional: if you store your Google Play JSON key in a Codemagic env group
+        - google_play_credentials # Contains your Google Play JSON service account credentials
+        - keystore_credentials    # Contains CM_KEYSTORE, CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS, CM_KEY_PASSWORD
       node: latest
       java: 17
     triggering:
@@ -44,7 +39,7 @@ workflows:
           # Codemagic environment variables automatically decode and write the keystore file
           echo $CM_KEYSTORE | base64 --decode > /tmp/keystore.jks
           
-          # Inject keystore properties into gradle.properties or sign via environment
+          # Inject keystore properties into gradle.properties
           cat << EOT >> android/gradle.properties
           MY_APP_UPLOAD_STORE_FILE=/tmp/keystore.jks
           MY_APP_UPLOAD_STORE_PASSWORD=$CM_KEYSTORE_PASSWORD
@@ -62,9 +57,8 @@ workflows:
 
     publishing:
       google_play:
-        # Credentials can be uploaded as a JSON file in CodeMagic App Settings -> Integrations -> Google Play
-        credentials: $GTECH_GOOGLE_PLAY_CREDENTIALS 
-        track: internal # Change to 'production', 'alpha', or 'beta' when ready
+        credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS 
+        track: internal
         submit_as_draft: false
       email:
         recipients:

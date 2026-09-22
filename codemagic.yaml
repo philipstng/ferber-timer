@@ -1,11 +1,19 @@
 workflows:
   android-release:
-    name: Build Android App Bundle (.aab) & Debug APK
+    name: Build & Publish Android App Bundle (.aab) to Google Play
     max_build_duration: 30
     instance_type: mac_mini_m1
     environment:
       vars:
         PACKAGE_NAME: "com.ferbersleeptimer.babytracker"
+      # Secure environment variables for keystore (set these up in CodeMagic UI)
+      secure:
+        - CM_KEYSTORE
+        - CM_KEYSTORE_PASSWORD
+        - CM_KEY_ALIAS
+        - CM_KEY_PASSWORD
+      groups:
+        - google_play_credentials # Optional: if you store your Google Play JSON key in a Codemagic env group
       node: latest
       java: 17
     triggering:
@@ -31,16 +39,33 @@ workflows:
         script: |
           npx cap sync android
 
-      - name: Build Android App Bundle (.aab) and Debug APK
+      - name: Set up keystore
+        script: |
+          # Codemagic environment variables automatically decode and write the keystore file
+          echo $CM_KEYSTORE | base64 --decode > /tmp/keystore.jks
+          
+          # Inject keystore properties into gradle.properties or sign via environment
+          cat << EOT >> android/gradle.properties
+          MY_APP_UPLOAD_STORE_FILE=/tmp/keystore.jks
+          MY_APP_UPLOAD_STORE_PASSWORD=$CM_KEYSTORE_PASSWORD
+          MY_APP_UPLOAD_KEY_ALIAS=$CM_KEY_ALIAS
+          MY_APP_UPLOAD_KEY_PASSWORD=$CM_KEY_PASSWORD
+          EOT
+
+      - name: Build Signed Android App Bundle (.aab)
         script: |
           cd android
-          ./gradlew bundleRelease assembleDebug
+          ./gradlew bundleRelease
 
     artifacts:
       - android/app/build/outputs/bundle/release/*.aab
-      - android/app/build/outputs/apk/debug/*.apk
 
     publishing:
+      google_play:
+        # Credentials can be uploaded as a JSON file in CodeMagic App Settings -> Integrations -> Google Play
+        credentials: $GTECH_GOOGLE_PLAY_CREDENTIALS 
+        track: internal # Change to 'production', 'alpha', or 'beta' when ready
+        submit_as_draft: false
       email:
         recipients:
           - neilson_m@yahoo.com

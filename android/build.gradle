@@ -1,61 +1,36 @@
-apply plugin: 'com.android.application'
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
 
-android {
-    namespace "com.ferbersleeptimer.babytracker"
-    compileSdk rootProject.ext.compileSdkVersion
-
-    signingConfigs {
-        release {
-            if (project.hasProperty('MY_APP_UPLOAD_STORE_FILE')) {
-                storeFile file(MY_APP_UPLOAD_STORE_FILE)
-                storePassword MY_APP_UPLOAD_STORE_PASSWORD
-                keyAlias MY_APP_UPLOAD_KEY_ALIAS
-                keyPassword MY_APP_UPLOAD_KEY_PASSWORD
-            }
-        }
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
     }
-
-    defaultConfig {
-        applicationId "com.ferbersleeptimer.babytracker"
-        minSdk rootProject.ext.minSdkVersion
-        targetSdk rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    buildTypes {
-        release {
-            signingConfig signingConfigs.release
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.1' // Or your project's gradle version plugin
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
     }
 }
 
-repositories {
-    flatDir {
-        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
     }
 }
 
-dependencies {
-    implementation fileTree(include: ['*.jar', '*.include'], dir: 'libs')
-    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
-    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
-    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
-    implementation project(':capacitor-android')
-    testImplementation "junit:junit:$junitVersion"
-    androidTestImplementation "androidx.test.ext:junit:$androidxExtJunitVersion"
-    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
-    implementation project(':capacitor-cordova-android-plugins')
+task clean(type: Delete) {
+    delete rootProject.buildDir
 }
 
-try {
-    def googleServicesJSON = file('google-services.json')
-    if (googleServicesJSON.exists()) {
-        apply plugin: 'com.google.gms.google-services'
-    }
-} catch (Exception e) {
-    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work without it.")
+ext {
+    minSdkVersion = 22
+    compileSdkVersion = 34
+    targetSdkVersion = 34
+    androidxAppCompatVersion = '1.6.1'
+    androidxCoordinatorLayoutVersion = '1.2.0'
+    coreSplashScreenVersion = '1.0.0'
+    junitVersion = '4.13.2'
+    androidxExtJunitVersion = '1.1.5'
+    androidxEspressoCoreVersion = '3.5.1'
 }

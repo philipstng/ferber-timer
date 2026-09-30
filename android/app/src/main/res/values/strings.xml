@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Ferber Sleep Timer &amp; Tracker</string>
+    <string name="title_activity_main">Ferber Sleep Timer &amp; Tracker</string>
+    <string name="package_name">com.ferbersleeptimer.babytracker</string>
+    <string name="custom_url_scheme">com.ferbersleeptimer.babytracker</string>
+</resources>

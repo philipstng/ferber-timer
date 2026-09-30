@@ -50,7 +50,7 @@ workflows:
       - name: Build Signed Android App Bundle (.aab)
         script: |
           cd android
-          ./gradlew bundleRelease
+          ./gradlew clean bundleRelease
 
     artifacts:
       - android/app/build/outputs/bundle/release/*.aab

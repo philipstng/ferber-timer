@@ -6,9 +6,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.1' // Or your project's gradle version plugin
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+        classpath 'com.android.tools.build:gradle:8.1.1'
+        classpath 'com.google.gms:google-services:4.4.0'
     }
 }
 
@@ -31,6 +30,7 @@ ext {
     androidxCoordinatorLayoutVersion = '1.2.0'
     coreSplashScreenVersion = '1.0.0'
     junitVersion = '4.13.2'
+    androidxJunitVersion = '1.1.5'
     androidxExtJunitVersion = '1.1.5'
     androidxEspressoCoreVersion = '3.5.1'
 }

@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     namespace "com.ferbersleeptimer.babytracker"
-    compileSdk 35
+    compileSdk rootProject.ext.compileSdkVersion
 
     signingConfigs {
         release {
@@ -17,8 +17,8 @@ android {
 
     defaultConfig {
         applicationId "com.ferbersleeptimer.babytracker"
-        minSdk 22
-        targetSdk 35
+        minSdk rootProject.ext.minSdkVersion
+        targetSdk rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

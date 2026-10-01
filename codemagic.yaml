@@ -1,6 +1,7 @@
 workflows:
   android-release:
-    name: Build & Publish Android App Bundle (.aab) to Google Play
+    # name: Build & Publish Android App Bundle (.aab) to Google Play
+    name: Build Android App Bundle (.aab)
     max_build_duration: 30
     instance_type: mac_mini_m1
     environment:
@@ -55,11 +56,11 @@ workflows:
     artifacts:
       - android/app/build/outputs/bundle/release/*.aab
 
-    publishing:
-      google_play:
-        credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS 
-        track: internal
-        submit_as_draft: false
-      email:
-        recipients:
-          - neilson_m@yahoo.com
+    # publishing:
+      # google_play:
+        # credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS 
+        # track: internal
+        # submit_as_draft: false
+      # email:
+        # recipients:
+          # - neilson_m@yahoo.com

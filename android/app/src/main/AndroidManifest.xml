@@ -38,6 +38,11 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+    <!-- ADD ADMOB INFORMATION -->
+    <meta-data
+    android:name="com.google.android.gms.ads.APPLICATION_ID"
+    android:value="ca-app-pub-8347474471258686~6450368948"/>
+
     </application>
 
 </manifest>

@@ -1,66 +1,23 @@
 workflows:
-  android-release:
-    # name: Build & Publish Android App Bundle (.aab) to Google Play
-    name: Build Android App Bundle (.aab)
+  android-native-debug:
+    name: Native Android Debug APK
     max_build_duration: 30
-    instance_type: mac_mini_m1
-    environment:
-      vars:
-        PACKAGE_NAME: "com.ferbersleeptimer.babytracker"
-      groups:
-        - google_play_credentials # Contains GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
-        - keystore_credentials    # Contains CM_KEYSTORE, CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS, CM_KEY_PASSWORD
-      node: latest
-      java: 17
-    triggering:
-      events:
-        - push
-      branch_patterns:
-        - pattern: 'main'
-          include: true
+    instance_type: mac_mini_m2
+
     scripts:
-      - name: Install dependencies
-        script: |
-          npm install
-
-      - name: Copy Web Assets (Build Step)
-        script: |
-          npm run build
-
-      - name: Sync Native Project
-        script: |
-          # Syncs your tracked android folder with web build assets and plugins
-          npx cap sync android
-
-      - name: Set up keystore
-        script: |
-          # Decode the base64 keystore into a temporary file
-          echo $CM_KEYSTORE | base64 --decode > /tmp/keystore.jks
-          
-          # Export path so Gradle / environment knows where it lives
-          echo "CM_KEYSTORE_PATH=/tmp/keystore.jks" >> $CM_ENV
-          
-          # Inject keystore properties into gradle.properties
-          cat << EOT >> android/gradle.properties
-          MY_APP_UPLOAD_STORE_FILE=/tmp/keystore.jks
-          MY_APP_UPLOAD_STORE_PASSWORD=$CM_KEYSTORE_PASSWORD
-          MY_APP_UPLOAD_KEY_ALIAS=$CM_KEY_ALIAS
-          MY_APP_UPLOAD_KEY_PASSWORD=$CM_KEY_PASSWORD
-          EOT
-
-      - name: Build Signed Android App Bundle (.aab)
+      - name: Set Android SDK location
+        script: echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+      - name: Build Debug APK
         script: |
           cd android
-          ./gradlew clean bundleRelease
+          ./gradlew assembleDebug
 
     artifacts:
-      - android/app/build/outputs/bundle/release/*.aab
+      - android/app/build/outputs/apk/debug/*.apk
 
-    # publishing:
-      # google_play:
-        # credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS 
-        # track: internal
-        # submit_as_draft: false
-      # email:
-        # recipients:
-          # - neilson_m@yahoo.com
+    publishing:
+      email:
+        recipients:
+          - dev-team@example.com
+        notify:
+          success: true

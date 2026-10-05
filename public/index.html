@@ -261,8 +261,6 @@
 
     <!-- BOTTOM SECTION -->
     <div style="margin-bottom: 70px;">
-    <button id="pauseBtn">Pause</button>
-    <button id="resetBtn">Reset</button>
         <div class="controls">
             <button class="control-btn start-btn" id="startBtn" onclick="toggleTimer()">Start</button>
             <button class="control-btn reset-btn" onclick="resetTimer()">Reset</button>
@@ -439,25 +437,34 @@
 </script>
 
 <!-- JavaScript banner launcher for AdMob -->
-<script>
-  import { AdMob, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
+<!-- AdMob Sticky Banner Script -->
+    <script type="module">
+      import { AdMob, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
 
-  async function showStickyBanner() {
-    try {
-      await AdMob.initialize();
-      await AdMob.showBanner({
-        adId: 'ca-app-pub-3940256099942544/6300978111', // Your Banner Ad Unit ID
-        adSize: BannerAdSize.BANNER,
-        position: BannerAdPosition.BOTTOM_CENTER,
-        margin: 0
-      });
-    } catch (e) {
-      console.error('AdMob Error:', e);
-    }
-  }
+      async function initializeAndShowBanner() {
+        try {
+          // Initialize AdMob SDK
+          await AdMob.initialize();
 
-  document.addEventListener('DOMContentLoaded', showStickyBanner);
-</script>
+          // Show Sticky Banner at the bottom
+          await AdMob.showBanner({
+            // Official Google Android Banner Test ID (Safe for Closed Testing)
+            adId: 'ca-app-pub-3940256099942544/6300978111', 
+            adSize: BannerAdSize.BANNER,
+            position: BannerAdPosition.BOTTOM_CENTER,
+            margin: 0,
+            isTesting: true
+          });
+          
+          console.log('AdMob Banner initialized successfully.');
+        } catch (error) {
+          console.error('AdMob Error:', error);
+        }
+      }
+
+      // Launch banner when DOM is fully loaded
+      document.addEventListener('DOMContentLoaded', initializeAndShowBanner);
+    </script>
 
 </body>
 </html>

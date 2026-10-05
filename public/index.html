@@ -436,35 +436,39 @@
     
 </script>
 
-<!-- JavaScript banner launcher for AdMob -->
-<!-- AdMob Sticky Banner Script -->
-    <script type="module">
-      import { AdMob, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
+<!-- Native AdMob Sticky Banner Launcher -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Wait for native Capacitor bridge initialization
+    document.addEventListener('deviceready', async () => {
+      try {
+        // Access AdMob directly via Capacitor global bridge
+        const AdMob = window.Capacitor?.Plugins?.AdMob;
 
-      async function initializeAndShowBanner() {
-        try {
-          // Initialize AdMob SDK
+        if (AdMob) {
+          // 1. Initialize SDK
           await AdMob.initialize();
 
-          // Show Sticky Banner at the bottom
+          // 2. Display sticky banner at bottom center
           await AdMob.showBanner({
-            // Official Google Android Banner Test ID (Safe for Closed Testing)
-            adId: 'ca-app-pub-3940256099942544/6300978111', 
-            adSize: BannerAdSize.BANNER,
-            position: BannerAdPosition.BOTTOM_CENTER,
+            adId: 'ca-app-pub-3940256099942544/6300978111', // Test Banner ID
+            adSize: 'BANNER',
+            position: 'BOTTOM_CENTER',
             margin: 0,
             isTesting: true
           });
-          
-          console.log('AdMob Banner initialized successfully.');
-        } catch (error) {
-          console.error('AdMob Error:', error);
-        }
-      }
 
-      // Launch banner when DOM is fully loaded
-      document.addEventListener('DOMContentLoaded', initializeAndShowBanner);
-    </script>
+          console.log('AdMob Banner shown successfully.');
+        } else {
+          console.warn('AdMob plugin non-existent on window.Capacitor.Plugins');
+        }
+      } catch (err) {
+        console.error('AdMob initialization failed:', err);
+      }
+    });
+  });
+</script>
+
 
 </body>
 </html>

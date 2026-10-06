@@ -25,6 +25,10 @@
             background-color: #f8f9fa;
         }
 
+        body {
+            margin-bottom: 60px !important; /* Reserves space for the 50px-high AdMob banner */
+        }
+
         .app-container {
             display: flex;
             flex-direction: column;
@@ -216,7 +220,7 @@
     <!-- TOP SECTION -->
     <div class="top-section">
         <div class="header-row">
-            <div class="title">Ferber Method Timer v.11</div>
+            <div class="title">Ferber Method Timer v.12</div>
             <button class="mute-btn" id="muteToggle" aria-label="Toggle Sound">
                 <!-- Speaker Unmuted Icon -->
                 <svg id="iconUnmuted" viewBox="0 0 24 24">
@@ -467,7 +471,7 @@
       await AdMob.showBanner({
         adId: 'ca-app-pub-3940256099942544/6300978111', // Test Banner IDs
         adSize: 'BANNER',
-        position: 'BOTTOM_CENTER',
+        position: 'TOP_CENTER',
         margin: 16,
         isTesting: true
       });

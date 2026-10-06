@@ -29,7 +29,7 @@ workflows:
       - name: Sync Native Project
         script: |
           # Syncs your tracked android folder with web build assets and plugins
-          npx cap sync android
+          npx @capacitor/cli cap sync android
 
       - name: Build Android Debug APK
         script: |

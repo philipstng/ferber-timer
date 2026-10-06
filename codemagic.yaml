@@ -24,7 +24,7 @@ workflows:
 
       - name: Sync Native Project
         script: |
-          npx cap sync android
+          npx cap sync android --force
 
       - name: Build Android Debug APK
         script: |

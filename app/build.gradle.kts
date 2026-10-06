@@ -55,5 +55,9 @@ dependencies {
     implementation(libs.androidx.material3)
 
     // In-App Review API: Essential for maintaining rating counts and ASO rankings
-    implementation("com.google.android.play:review-ktx:2.0.1")
+    implementation("com.google.android.play:review-ktx:2.0.1") 
+
+// Google Mobile Ads SDK
+    implementation("com.google.android.gms:play-services-ads:25.5.0")
+
 }

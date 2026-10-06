@@ -7,8 +7,8 @@ workflows:
       vars:
         PACKAGE_NAME: "com.ferbersleeptimer.babytracker"
       groups:
-        - google_play_credentials # Contains GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
-        - keystore_credentials    # Contains CM_KEYSTORE, CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS, CM_KEY_PASSWORD
+        - google_play_credentials
+        - keystore_credentials
       node: latest
       java: 17
     triggering:
@@ -22,14 +22,9 @@ workflows:
         script: |
           npm install
 
-      - name: Copy Web Assets (Build Step)
-        script: |
-          npm run build
-
       - name: Sync Native Project
         script: |
-          # Syncs your tracked android folder with web build assets and plugins
-          npx @capacitor/cli sync android
+          npx cap sync android
 
       - name: Build Android Debug APK
         script: |
@@ -39,8 +34,3 @@ workflows:
 
     artifacts:
       - android/app/build/outputs/apk/debug/*.apk
-
-    # publishing:
-      # email:
-        # recipients:
-          # - neilson_m@yahoo.com

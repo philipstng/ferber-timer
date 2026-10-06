@@ -475,6 +475,7 @@
       console.log('AdMob Banner shown successfully.');
     } catch (err) {
       console.error('AdMob initialization failed:', err);
+      alert('AdMob Error: ' + (err.message || JSON.stringify(err)));
     }
   }
 

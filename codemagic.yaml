@@ -15,7 +15,7 @@ workflows:
       events:
         - push
       branch_patterns:
-        - pattern: 'main'
+        - pattern: '*'
           include: true
     scripts:
       - name: Install dependencies
@@ -34,6 +34,7 @@ workflows:
       - name: Build Android Debug APK
         script: |
           cd android
+          chmod +x gradlew
           ./gradlew assembleDebug
 
     artifacts:

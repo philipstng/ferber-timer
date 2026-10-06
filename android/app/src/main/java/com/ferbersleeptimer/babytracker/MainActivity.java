@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebView;
 import android.widget.FrameLayout;
 
 import com.getcapacitor.BridgeActivity;
@@ -19,8 +18,6 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // DO NOT call setContentView(R.layout.activity_main) here!
-        
         // 1. Initialize Mobile Ads SDK
         MobileAds.initialize(this, initializationStatus -> {});
 
@@ -29,18 +26,17 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void setupAdLayout() {
-        // Get Capacitor's root view
         ViewGroup rootView = findViewById(android.R.id.content);
         if (rootView == null || rootView.getChildCount() == 0) return;
 
-        // Get Capacitor's WebView (the first child created by BridgeActivity)
+        // Get Capacitor's WebView
         View webView = rootView.getChildAt(0);
 
-        // Inflate your activity_main.xml layout
+        // Inflate custom layout
         LayoutInflater inflater = LayoutInflater.from(this);
         View layoutView = inflater.inflate(R.layout.activity_main, rootView, false);
 
-        // Remove the webview from rootView and attach it into your webview_container
+        // Re-parent WebView inside webview_container
         rootView.removeView(webView);
         FrameLayout webviewContainer = layoutView.findViewById(R.id.webview_container);
         webviewContainer.addView(webView, new FrameLayout.LayoutParams(
@@ -48,7 +44,7 @@ public class MainActivity extends BridgeActivity {
                 FrameLayout.LayoutParams.MATCH_PARENT
         ));
 
-        // Add the custom layout containing the webview and the ad back to root
+        // Add modified view hierarchy back to root
         rootView.addView(layoutView);
 
         // 3. Load Banner Ad
@@ -57,5 +53,31 @@ public class MainActivity extends BridgeActivity {
             AdRequest adRequest = new AdRequest.Builder().build();
             mAdView.loadAd(adRequest);
         }
+    }
+
+    // --- AdView Lifecycle Callbacks ---
+
+    @Override
+    public void onPause() {
+        if (mAdView != null) {
+            mAdView.pause(); // Pauses ad auto-refreshing & animations
+        }
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mAdView != null) {
+            mAdView.resume(); // Resumes ad timer & animations
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        if (mAdView != null) {
+            mAdView.destroy(); // Cleans up resources & prevents memory leaks
+        }
+        super.onDestroy();
     }
 }

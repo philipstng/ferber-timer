@@ -1,0 +1,16 @@
+{
+	"appId": "com.ferbersleeptimer.babytracker",
+	"appName": "Ferber Sleep Timer",
+	"webDir": "public",
+	"bundledWebRuntime": false,
+	"plugins": {
+		"AdMob": {
+			"initializeOnTesting": true
+		},
+		"SplashScreen": {
+			"launchShowDuration": 2000,
+			"backgroundColor": "#1A1B2F",
+			"showSpinner": false
+		}
+	}
+}

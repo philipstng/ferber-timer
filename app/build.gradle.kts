@@ -13,8 +13,8 @@ android {
         applicationId = "com.ferbersleeptimer.babytracker"
         minSdk = 24
         targetSdk = 36
-        versionCode = 9
-        versionName = "1.3.5"
+        versionCode = 11
+        versionName = "1.3.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -55,5 +55,6 @@ dependencies {
     implementation(libs.androidx.material3)
 
     // In-App Review API: Essential for maintaining rating counts and ASO rankings
-    implementation("com.google.android.play:review-ktx:2.0.1")
+    implementation("com.google.android.play:review-ktx:2.0.1") 
+
 }

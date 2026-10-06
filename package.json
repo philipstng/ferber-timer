@@ -16,10 +16,11 @@
   "author": "Philco",
   "license": "ISC",
   "dependencies": {
+    "@capacitor-community/admob": "^6.2.0",
     "@capacitor/android": "^6.0.0",
     "@capacitor/core": "^6.0.0"
   },
   "devDependencies": {
-    "@capacitor/cli": "^6.0.0"
+    "@capacitor/cli": "^6.2.2"
   }
 }

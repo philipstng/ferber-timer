@@ -4,6 +4,9 @@
   "webDir": "public",
   "bundledWebRuntime": false,
   "plugins": {
+    "AdMob": {
+    "initializeOnTesting": true
+    },
     "SplashScreen": {
       "launchShowDuration": 2000,
       "backgroundColor": "#1A1B2F",

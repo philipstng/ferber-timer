@@ -35,7 +35,7 @@ workflows:
         script: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew clean assembleDebug
 
     artifacts:
       - android/app/build/outputs/apk/debug/*.apk

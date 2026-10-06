@@ -465,6 +465,18 @@
         console.warn('Consent info check bypassed or not required:', consentErr);
       }
       
+
+      // Add event listeners before calling showBanner
+        await AdMob.addListener('bannerAdLoaded', () => {
+            alert('AdMob Event: Banner Loaded Successfully!');
+            });
+
+        await AdMob.addListener('bannerAdFailedToLoad', (err) => {
+            alert('AdMob Event Failed: ' + JSON.stringify(err));
+            });
+      
+
+
       // 2. Initialize SDK
       await AdMob.initialize();
 
@@ -473,7 +485,7 @@
         adId: 'ca-app-pub-3940256099942544/6300978111', // Test Banner IDs
         adSize: 'BANNER',
         position: 'TOP_CENTER',
-        margin: 16,
+        margin: 0,
         isTesting: true
       });
 

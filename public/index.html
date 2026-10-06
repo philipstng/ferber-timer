@@ -450,63 +450,68 @@
 <!-- Native AdMob Sticky Banner Launcher -->
 <script>
   async function initAdMob() {
+    // VISUAL CHECK 1: Confirms execution reached the function
+    alert('1. Starting AdMob Initialization...');
+
     try {
       const AdMob = window.Capacitor?.Plugins?.AdMob;
 
+      // VISUAL CHECK 2: Alerts if the native plugin binding is missing
       if (!AdMob) {
-        console.warn('AdMob plugin non-existent on window.Capacitor.Plugins');
+        alert('AdMob Error: Plugin is missing on window.Capacitor.Plugins (Native build/sync issue)');
         return;
       }
 
-      // 1. Request consent info (wrapped to prevent blocking setup if unconfigured)
+      // Add event listeners BEFORE calling showBanner
+      await AdMob.addListener('bannerAdLoaded', () => {
+        alert('AdMob Event: Banner Loaded Successfully!');
+      });
+
+      await AdMob.addListener('bannerAdFailedToLoad', (err) => {
+        alert('AdMob Event Failed: ' + JSON.stringify(err));
+      });
+
+      // 1. Request consent info (wrapped safely)
       try {
         await AdMob.requestConsentInfo();
       } catch (consentErr) {
-        console.warn('Consent info check bypassed or not required:', consentErr);
+        console.warn('Consent info check bypassed:', consentErr);
       }
-      
-
-      // Add event listeners before calling showBanner
-        await AdMob.addListener('bannerAdLoaded', () => {
-            alert('AdMob Event: Banner Loaded Successfully!');
-            });
-
-        await AdMob.addListener('bannerAdFailedToLoad', (err) => {
-            alert('AdMob Event Failed: ' + JSON.stringify(err));
-            });
-      
-
 
       // 2. Initialize SDK
       await AdMob.initialize();
 
       // 3. Show banner
       await AdMob.showBanner({
-        adId: 'ca-app-pub-3940256099942544/6300978111', // Test Banner IDs
+        adId: 'ca-app-pub-3940256099942544/6300978111', // Test Banner ID
         adSize: 'BANNER',
         position: 'TOP_CENTER',
         margin: 0,
         isTesting: true
       });
 
-      console.log('AdMob Banner shown successfully.');
+      alert('2. showBanner command sent to Android native layer!');
     } catch (err) {
       console.error('AdMob initialization failed:', err);
-      alert('AdMob Error: ' + (err.message || JSON.stringify(err)));
+      const errStr = err?.message || JSON.stringify(err, Object.getOwnPropertyNames(err));
+      alert('AdMob Catch Error: ' + errStr);
     }
   }
 
-  // Trigger AdMob initialization once window and capacitor.js finish loading
-  window.addEventListener('load', () => {
-    // Small delay ensures Capacitor plugins are fully bound to window
-    setTimeout(() => {
-      if (window.Capacitor) {
-        initAdMob();
-      } else {
-        console.log('Browser environment detected: Skipping native AdMob init.');
-      }
-    }, 300);
-  });
+  // Safe Execution Handler: Bypasses the 'load' event race condition
+  function startAdMobFlow() {
+    if (window.Capacitor) {
+      initAdMob();
+    } else {
+      alert('Notice: Running in web browser (window.Capacitor is undefined). Native ads disabled.');
+    }
+  }
+
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(startAdMobFlow, 300);
+  } else {
+    window.addEventListener('DOMContentLoaded', () => setTimeout(startAdMobFlow, 300));
+  }
 </script>
     
 

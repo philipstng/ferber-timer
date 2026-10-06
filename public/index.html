@@ -450,17 +450,20 @@
       const AdMob = window.Capacitor?.Plugins?.AdMob;
 
       if (AdMob) {
-        // 1. Initialize SDK
-        await AdMob.initialize();
+      // 1. Request consent info (required on newer Android versions)
+      await AdMob.requestConsentInfo();
+      
+      // 2. Initialize SDK
+      await AdMob.initialize();
 
-        // 2. Display sticky banner at bottom center
-        await AdMob.showBanner({
-          adId: 'ca-app-pub-3940256099942544/6300978111', // Test Banner ID
-          adSize: 'BANNER',
-          position: 'BOTTOM_CENTER',
-          margin: 0,
-          isTesting: true
-        });
+      // 3. Show banner
+      await AdMob.showBanner({
+        adId: 'ca-app-pub-3940256099942544/6300978111', // Test Banner ID
+        adSize: 'BANNER',
+        position: 'BOTTOM_CENTER',
+        margin: 0,
+        isTesting: true
+      });
 
         console.log('AdMob Banner shown successfully.');
       } else {

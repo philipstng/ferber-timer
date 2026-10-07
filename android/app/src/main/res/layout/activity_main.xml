@@ -9,7 +9,7 @@
         android:id="@+id/webview_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/ad_view_container" />
+        android:layout_above="@+id/ad_divider" />
 
     <!-- 1dp Divider Line -->
 <View

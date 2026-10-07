@@ -11,6 +11,14 @@
         android:layout_height="match_parent"
         android:layout_above="@+id/ad_view_container" />
 
+    <!-- 1dp Divider Line -->
+<View
+    android:id="@+id/ad_divider"
+    android:layout_width="match_parent"
+    android:layout_height="1dp"
+    android:layout_above="@+id/ad_view_container"
+    android:background="#D3D3D3" />
+
     <!-- Sticky Bottom Banner Ad -->
     <FrameLayout
         android:id="@+id/ad_view_container"

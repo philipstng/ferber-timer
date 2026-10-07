@@ -70,7 +70,7 @@ public class MainActivity extends BridgeActivity {
         // Create new AdView instance
         mAdView = new AdView(this);
         
-        // Replace with your real production Ad Unit ID when ready
+        // Place with Ad Unit ID
         mAdView.setAdUnitId("ca-app-pub-3940256099942544/6300978111");
 
         // Clear container and attach AdView

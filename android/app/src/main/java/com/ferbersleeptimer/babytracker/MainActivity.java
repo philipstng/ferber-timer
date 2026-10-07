@@ -14,11 +14,11 @@ import com.google.android.gms.ads.MobileAds;
 // Added in new branch version 5
 import android.util.DisplayMetrics;
 import android.view.Display;
-import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.gms.ads.AdSize;
 
 public class MainActivity extends BridgeActivity {
     private AdView mAdView;
+    private FrameLayout mAdContainerView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

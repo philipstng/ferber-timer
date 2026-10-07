@@ -88,16 +88,14 @@ public class MainActivity extends BridgeActivity {
 
     private AdSize getAdSize() {
         // Determine current screen display width in dp
-        Display display = getWindowManager().getDefaultDisplay();
-        DisplayMetrics outMetrics = new DisplayMetrics();
-        display.getMetrics(outMetrics);
-
-        float density = outMetrics.density;
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+        
+        float density = displayMetrics.density;
         float adWidthPixels = mAdContainerView.getWidth();
 
         // Fallback to full screen width if layout pass isn't complete
         if (adWidthPixels == 0) {
-            adWidthPixels = outMetrics.widthPixels;
+            adWidthPixels = displayMetrics.widthPixels;
         }
 
         int adWidth = (int) (adWidthPixels / density);

@@ -8,8 +8,6 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        // ASO BEST PRACTICE: Include primary domain keywords directly in the package name/applicationId.
-        // Google Play indexes the package name as an indelible keyword signal.
         applicationId = "com.ferbersleeptimer.babytracker"
         minSdk = 24
         targetSdk = 36
@@ -23,6 +21,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Disable code shrinking for local IDE debug runs so launcher resources are preserved
+            isMinifyEnabled = false
+            isShrinkResources = false
+            isDebuggable = true
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -32,6 +36,7 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

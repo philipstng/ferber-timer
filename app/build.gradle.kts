@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.ferbersleeptimer.babytracker"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         // ASO BEST PRACTICE: Include primary domain keywords directly in the package name/applicationId.

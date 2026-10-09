@@ -38,7 +38,11 @@ workflows:
         script: |
           cd android
           chmod +x gradlew
-          ./gradlew clean bundleRelease
+          ./gradlew clean bundleRelease \
+            -PMY_APP_UPLOAD_STORE_FILE=codemagic.keystore \
+            -PMY_APP_UPLOAD_STORE_PASSWORD="$CM_KEYSTORE_PASSWORD" \
+            -PMY_APP_UPLOAD_KEY_ALIAS="$CM_KEY_ALIAS" \
+            -PMY_APP_UPLOAD_KEY_PASSWORD="$CM_KEY_PASSWORD"
 
     artifacts:
       - android/app/build/outputs/bundle/release/*.aab

@@ -11,6 +11,10 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
 
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
 // Added in new branch version 5
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -22,6 +26,10 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        
+        // 0. Allow layout to extend under system status bar and navigation bar
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
         super.onCreate(savedInstanceState);
 
         // 1. Initialize Mobile Ads SDK
@@ -58,6 +66,24 @@ public class MainActivity extends BridgeActivity {
         // 3. Load Banner Ad dynamically into container
         mAdContainerView = layoutView.findViewById(R.id.ad_view_container);
         if (mAdContainerView != null) {
+
+            // =========================================================================
+            //  INSERT WINDOWINSETS LISTENER HERE
+            //  Dynamically adjusts padding so the ad doesn't overlap gesture/nav bar
+            // =========================================================================
+            ViewCompat.setOnApplyWindowInsetsListener(mAdContainerView, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                
+                // Apply navigation bar height directly as bottom padding
+                v.setPadding(
+                    v.getPaddingLeft(),
+                    v.getPaddingTop(),
+                    v.getPaddingRight(),
+                    systemBars.bottom
+                );
+                return insets;
+            });
+
             // Post to queue to ensure container dimensions are calculated before loading
             mAdContainerView.post(this::loadBanner);
         }   

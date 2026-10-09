@@ -11,11 +11,25 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
 
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+// Added in new branch version 5
+import android.util.DisplayMetrics;
+import android.view.Display;
+import com.google.android.gms.ads.AdSize;
+
 public class MainActivity extends BridgeActivity {
     private AdView mAdView;
+    private FrameLayout mAdContainerView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        
+        // 0. Allow layout to extend under system status bar and navigation bar
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
         super.onCreate(savedInstanceState);
 
         // 1. Initialize Mobile Ads SDK
@@ -39,21 +53,87 @@ public class MainActivity extends BridgeActivity {
         // Re-parent WebView inside webview_container
         rootView.removeView(webView);
         FrameLayout webviewContainer = layoutView.findViewById(R.id.webview_container);
-        webviewContainer.addView(webView, new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-        ));
+        if (webviewContainer != null) {
+            webviewContainer.addView(webView, new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+            ));
+        }
 
         // Add modified view hierarchy back to root
         rootView.addView(layoutView);
 
-        // 3. Load Banner Ad
-        mAdView = layoutView.findViewById(R.id.adView);
-        if (mAdView != null) {
-            AdRequest adRequest = new AdRequest.Builder().build();
-            mAdView.loadAd(adRequest);
-        }
+        // 3. Load Banner Ad dynamically into container
+        mAdContainerView = layoutView.findViewById(R.id.ad_view_container);
+        if (mAdContainerView != null) {
+
+            // =========================================================================
+            //  INSERT WINDOWINSETS LISTENER HERE
+            //  Dynamically adjusts padding so the ad doesn't overlap gesture/nav bar
+            // =========================================================================
+            ViewCompat.setOnApplyWindowInsetsListener(mAdContainerView, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                
+                // Apply navigation bar height directly as bottom padding
+                v.setPadding(
+                    v.getPaddingLeft(),
+                    v.getPaddingTop(),
+                    v.getPaddingRight(),
+                    systemBars.bottom
+                );
+                return insets;
+            });
+
+            // Post to queue to ensure container dimensions are calculated before loading
+            mAdContainerView.post(this::loadBanner);
+        }   
     }
+
+
+    // --- LOAD DYNAMIC BANNER ---
+
+    private void loadBanner() {
+        // Create new AdView instance
+        mAdView = new AdView(this);
+        
+        // Place with Ad Unit ID
+        mAdView.setAdUnitId("ca-app-pub-3940256099942544/6300978111");
+
+        // Clear container and attach AdView
+        mAdContainerView.removeAllViews();
+        mAdContainerView.addView(mAdView);
+
+        // Calculate maximum adaptive size fitting available screen width
+        AdSize adSize = getAdSize();
+        mAdView.setAdSize(adSize);
+
+        // Request and load ad
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+    }
+
+    private AdSize getAdSize() {
+        // Determine current screen display width in dp
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+        
+        float density = displayMetrics.density;
+        float adWidthPixels = mAdContainerView.getWidth();
+
+        // Fallback to full screen width if layout pass isn't complete
+        if (adWidthPixels == 0) {
+            adWidthPixels = displayMetrics.widthPixels;
+        }
+
+        int adWidth = (int) (adWidthPixels / density);
+
+        // Option A: Large Anchored Adaptive (Scales up to ~20% height for maximum eCPM)
+        return AdSize.getLargeAnchoredAdaptiveBannerAdSize(this, adWidth);
+
+        // Option B: Standard Anchored Adaptive (Caps height strictly at ~15% or 90dp)
+        // return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, adWidth);
+    }
+
+
 
     // --- AdView Lifecycle Callbacks ---
 

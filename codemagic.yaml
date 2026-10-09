@@ -1,5 +1,5 @@
 workflows:
-  android-debug:
+  android-release:
     name: Build Android Release AAB
     max_build_duration: 30
     instance_type: mac_mini_m1
@@ -7,7 +7,6 @@ workflows:
       vars:
         PACKAGE_NAME: "com.ferbersleeptimer.babytracker"
       groups:
-        - google_play_credentials
         - keystore_credentials
       node: latest
       java: 17
@@ -22,9 +21,18 @@ workflows:
         script: |
           npm install
 
+      - name: Build web app (Required for Capacitor)
+        script: |
+          npm run build  # Adjust if your frontend uses a different build script (e.g., ionic build)
+
       - name: Sync Native Project
         script: |
           npx cap sync android
+
+      - name: Set up keystore
+        script: |
+          # Assuming your base64-encoded keystore is stored in an environment variable 
+          echo $CM_KEYSTORE | base64 --decode > android/app/codemagic.keystore
 
       - name: Build Android Release AAB
         script: |

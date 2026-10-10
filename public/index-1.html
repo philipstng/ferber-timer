@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Ferber Sleep Training Timer</title>
+
+    <!-- REQUIRED FOR CAPACITOR NATIVE BRIDGE -->
+    <script src="capacitor.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #F7F7F8;
+            --card-bg: #FFFFFF;
+            --text-primary: #111111;
+            --text-secondary: #71717A;
+            --control-bg: #E4E4E7;
+            --active-pill-bg: #FFFFFF;
+            --active-pill-text: #111111;
+            --border-color: #E4E4E7;
+            --btn-primary-bg: #111111;
+            --btn-primary-text: #FFFFFF;
+            --btn-pause-bg: #71717A;
+            --shadow-color: rgba(0, 0, 0, 0.05);
+            --finished-bg: #22C55E;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0D0D0E;
+            --card-bg: #18181B;
+            --text-primary: #F4F4F5;
+            --text-secondary: #A1A1AA;
+            --control-bg: #27272A;
+            --active-pill-bg: #3F3F46;
+            --active-pill-text: #FFFFFF;
+            --border-color: #27272A;
+            --btn-primary-bg: #FFFFFF;
+            --btn-primary-text: #111111;
+            --btn-pause-bg: #3F3F46;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            /* Dimmer green so it isn't harsh in a dark nursery */
+            --finished-bg: #166534;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Transitions scoped to the elements that actually change */
+        body, .app-container, .btn-group, .day-btn, .checkin-btn, .timer-circle,
+        .timer-display, .control-btn, .title, .btn-label, .icon-btn {
+            transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+        }
+
+        button {
+            user-select: none; -webkit-user-select: none; font: inherit;
+            touch-action: manipulation; /* removes tap delay / double-tap zoom in Android WebView */
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            overscroll-behavior: none; /* no pull-to-refresh glow / bounce in Android WebView */
+            background-color: var(--bg-color);
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            max-width: 480px;
+            margin: 0 auto;
+            padding: calc(24px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right))
+                     calc(24px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));
+            justify-content: space-between;
+            background-color: var(--bg-color);
+        }
+
+        .top-section { display: flex; flex-direction: column; gap: 20px; margin-top: 10px; }
+
+        .header-row { display: flex; justify-content: space-between; align-items: center; }
+
+        .title { font-size: 1.1rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; }
+
+        .header-actions { display: flex; align-items: center; gap: 8px; }
+
+        .icon-btn {
+            background: none; border: none; cursor: pointer; padding: 8px;
+            color: var(--text-primary); outline: none;
+            display: flex; align-items: center; justify-content: center; border-radius: 50%;
+        }
+        .icon-btn:focus-visible, .day-btn:focus-visible, .checkin-btn:focus-visible,
+        .control-btn:focus-visible, .reset-btn:focus-visible {
+            outline: 2px solid var(--text-secondary); outline-offset: 2px;
+        }
+        .icon-btn svg { width: 22px; height: 22px; fill: currentColor; }
+
+        .control-group { display: flex; flex-direction: column; gap: 8px; }
+
+        .btn-label {
+            font-size: 0.7rem; font-weight: 700; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .btn-group {
+            display: flex; background-color: var(--control-bg);
+            padding: 3px; border-radius: 99px; gap: 3px;
+        }
+        .btn-group.locked { opacity: 0.55; }
+
+        .day-btn, .checkin-btn {
+            flex: 1; padding: 10px 0; border: none; border-radius: 99px;
+            background-color: transparent; color: var(--text-secondary);
+            font-weight: 600; cursor: pointer;
+        }
+        .day-btn { font-size: 0.85rem; }
+        .checkin-btn { font-size: 0.75rem; }
+        .day-btn:disabled, .checkin-btn:disabled { cursor: not-allowed; }
+
+        .day-btn.active, .checkin-btn.active {
+            background-color: var(--active-pill-bg);
+            color: var(--active-pill-text);
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+
+        .lock-hint {
+            font-size: 0.7rem; color: var(--text-secondary); text-align: center;
+            min-height: 1em; margin-top: -8px;
+        }
+
+        .middle-section {
+            flex: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+        }
+
+        .timer-circle {
+            width: 65vw; height: 65vw; max-width: 260px; max-height: 260px;
+            border-radius: 50%; border: 4px solid var(--border-color);
+            display: flex; justify-content: center; align-items: center;
+            background-color: var(--card-bg);
+            box-shadow: 0 12px 32px var(--shadow-color);
+        }
+        .timer-circle.finished { background-color: var(--finished-bg); border-color: var(--finished-bg); }
+
+        .timer-display {
+            font-size: 3.5rem; font-weight: 700; color: var(--text-primary);
+            font-variant-numeric: tabular-nums; letter-spacing: -1px;
+        }
+        .timer-circle.finished .timer-display { color: #FFFFFF; }
+
+        .controls { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+
+        .control-btn {
+            width: 100%; padding: 16px; border: none; border-radius: 16px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+        }
+        .start-btn { background-color: var(--btn-primary-bg); color: var(--btn-primary-text); }
+        .pause-btn { background-color: var(--btn-pause-bg); color: #FFFFFF; }
+
+        .reset-btn {
+            background: none; border: none; color: var(--text-secondary);
+            font-size: 0.9rem; font-weight: 600; padding: 10px; cursor: pointer;
+        }
+
+        .control-btn:active, .reset-btn:active, .icon-btn:active { opacity: 0.8; transform: scale(0.98); }
+
+        .sr-only {
+            position: absolute; width: 1px; height: 1px; overflow: hidden;
+            clip: rect(0 0 0 0); white-space: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app-container">
+    <!-- TOP SECTION -->
+    <div class="top-section">
+        <div class="header-row">
+            <div class="title">Ferber Method</div>
+            <div class="header-actions">
+                <button type="button" class="icon-btn" id="themeToggle" aria-label="Switch to dark mode">
+                    <svg id="iconMoon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12.3 2a10 10 0 0 0 9.7 11.6 10 10 0 1 1-11.6-9.7z"/>
+                    </svg>
+                    <svg id="iconSun" viewBox="0 0 24 24" style="display: none;" aria-hidden="true">
+                        <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zm-9-8c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1v2c0 .55.45 1 1 1zm0 16c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1zM5.64 7.05c.39-.39.39-1.02 0-1.41L4.22 4.22c-.39-.39-1.02-.39-1.41 0s-.39 1.02 0 1.41l1.42 1.42c.39.39 1.02.39 1.41 0zm12.72 12.72c.39-.39.39-1.02 0-1.41l-1.42-1.42c-.39-.39-1.02-.39-1.41 0s-.39 1.02 0 1.41l1.42 1.42c.39.39 1.02.39 1.41 0zM7.05 18.36l-1.42 1.42c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.42-1.42c.39-.39.39-1.02 0-1.41-.39-.38-1.03-.38-1.41 0zm12.72-12.72l-1.42 1.42c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.42-1.42c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0z"/>
+                    </svg>
+                </button>
+                <button type="button" class="icon-btn" id="muteToggle" aria-label="Mute alarm sound" aria-pressed="false">
+                    <svg id="iconUnmuted" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                    </svg>
+                    <svg id="iconMuted" viewBox="0 0 24 24" style="display: none;" aria-hidden="true">
+                        <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="btn-label" id="dayLabel">Day</div>
+            <div class="btn-group" id="dayGroup" role="group" aria-labelledby="dayLabel">
+                <button type="button" class="day-btn active" data-day="1" aria-pressed="true">1</button>
+                <button type="button" class="day-btn" data-day="2" aria-pressed="false">2</button>
+                <button type="button" class="day-btn" data-day="3" aria-pressed="false">3</button>
+                <button type="button" class="day-btn" data-day="4" aria-pressed="false">4</button>
+                <button type="button" class="day-btn" data-day="5" aria-pressed="false">5</button>
+                <button type="button" class="day-btn" data-day="6" aria-pressed="false">6</button>
+                <button type="button" class="day-btn" data-day="7" aria-pressed="false">7</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="btn-label" id="checkinLabel">Check-In Interval</div>
+            <div class="btn-group" id="checkinGroup" role="group" aria-labelledby="checkinLabel">
+                <button type="button" class="checkin-btn active" data-checkin="1" aria-pressed="true">1st</button>
+                <button type="button" class="checkin-btn" data-checkin="2" aria-pressed="false">2nd</button>
+                <button type="button" class="checkin-btn" data-checkin="3" aria-pressed="false">3rd</button>
+                <button type="button" class="checkin-btn" data-checkin="4" aria-pressed="false">Subseq.</button>
+            </div>
+        </div>
+        <div class="lock-hint" id="lockHint"></div>
+    </div>
+
+    <!-- MIDDLE SECTION -->
+    <div class="middle-section">
+        <div class="timer-circle" id="timerCircle">
+            <div class="timer-display" id="timerDisplay" role="timer" aria-live="off">03:00</div>
+        </div>
+    </div>
+
+    <!-- BOTTOM SECTION -->
+    <div class="controls">
+        <button type="button" class="control-btn start-btn" id="startBtn">Start Timer</button>
+        <button type="button" class="reset-btn" id="resetBtn">Reset</button>
+    </div>
+
+    <!-- Announces completion to screen readers without chatter every second -->
+    <div class="sr-only" id="statusRegion" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+    const ferberMatrix = {
+        1: { 1: 3,  2: 5,  3: 10, 4: 10 },
+        2: { 1: 5,  2: 10, 3: 12, 4: 12 },
+        3: { 1: 10, 2: 12, 3: 15, 4: 15 },
+        4: { 1: 12, 2: 15, 3: 17, 4: 17 },
+        5: { 1: 15, 2: 17, 3: 20, 4: 20 },
+        6: { 1: 17, 2: 20, 3: 25, 4: 25 },
+        7: { 1: 20, 2: 25, 3: 30, 4: 30 }
+    };
+
+    const NOTIFICATION_ID = 1;
+
+    /* ---------- Native plugin access (all guarded so it still works in a browser) ---------- */
+    const Plugins = (window.Capacitor && window.Capacitor.Plugins) || {};
+    const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+
+    /* ---------- State ---------- */
+    let selectedDay = 1;
+    let selectedCheckIn = 1;
+    let totalSeconds = 180;
+    let remainingMs = 180000;      // authoritative when paused / idle
+    let endTime = null;            // authoritative when running (epoch ms)
+    let tickInterval = null;
+    let isRunning = false;
+    let isFinished = false;
+    let isMuted = false;
+    let currentTheme = 'light';
+    let audioCtx = null;
+    let alarmNodes = [];
+
+    /* ---------- Elements ---------- */
+    const $ = (id) => document.getElementById(id);
+    const timerDisplay = $('timerDisplay');
+    const timerCircle = $('timerCircle');
+    const startBtn = $('startBtn');
+    const muteToggle = $('muteToggle');
+    const themeToggle = $('themeToggle');
+    const statusRegion = $('statusRegion');
+    const lockHint = $('lockHint');
+    const dayButtons = document.querySelectorAll('.day-btn');
+    const checkinButtons = document.querySelectorAll('.checkin-btn');
+
+    /* ---------- Persistence (Capacitor Preferences, falling back to localStorage) ---------- */
+    async function saveKey(key, value) {
+        const str = String(value);
+        try {
+            if (Plugins.Preferences) await Plugins.Preferences.set({ key, value: str });
+            else localStorage.setItem(key, str);
+        } catch (e) { /* storage unavailable; ignore */ }
+    }
+
+    async function loadKey(key) {
+        try {
+            if (Plugins.Preferences) {
+                const res = await Plugins.Preferences.get({ key });
+                return res.value;
+            }
+            return localStorage.getItem(key);
+        } catch (e) { return null; }
+    }
+
+    async function removeKey(key) {
+        try {
+            if (Plugins.Preferences) await Plugins.Preferences.remove({ key });
+            else localStorage.removeItem(key);
+        } catch (e) { /* ignore */ }
+    }
+
+    /* ---------- Theme ---------- */
+    function setTheme(theme, persist = true) {
+        currentTheme = theme;
+        document.documentElement.setAttribute('data-theme', theme);
+        $('iconMoon').style.display = theme === 'dark' ? 'none' : 'block';
+        $('iconSun').style.display = theme === 'dark' ? 'block' : 'none';
+        themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+        syncStatusBar(theme);
+        if (persist) saveKey('theme', theme);
+    }
+
+    // Keep the Android status bar matching the app theme (requires @capacitor/status-bar)
+    function syncStatusBar(theme) {
+        const SB = Plugins.StatusBar;
+        if (!SB || !isNative) return;
+        try {
+            // Style.Dark = light icons (for dark backgrounds)
+            SB.setStyle({ style: theme === 'dark' ? 'DARK' : 'LIGHT' });
+            if (isAndroid) SB.setBackgroundColor({ color: theme === 'dark' ? '#0D0D0E' : '#F7F7F8' });
+        } catch (e) { /* ignore */ }
+    }
+
+    themeToggle.addEventListener('click', () => setTheme(currentTheme === 'dark' ? 'light' : 'dark'));
+
+    /* ---------- Mute ---------- */
+    function setMuted(muted, persist = true) {
+        isMuted = muted;
+        $('iconUnmuted').style.display = muted ? 'none' : 'block';
+        $('iconMuted').style.display = muted ? 'block' : 'none';
+        muteToggle.setAttribute('aria-pressed', String(muted));
+        muteToggle.setAttribute('aria-label', muted ? 'Unmute alarm sound' : 'Mute alarm sound');
+        if (muted) stopAlarm();
+        if (persist) saveKey('muted', muted);
+    }
+
+    muteToggle.addEventListener('click', () => setMuted(!isMuted));
+
+    /* ---------- Display ---------- */
+    function displayTime(seconds) {
+        const s = Math.max(0, seconds);
+        const mins = Math.floor(s / 60);
+        const secs = s % 60;
+        timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function setLocked(locked) {
+        dayButtons.forEach(b => b.disabled = locked);
+        checkinButtons.forEach(b => b.disabled = locked);
+        $('dayGroup').classList.toggle('locked', locked);
+        $('checkinGroup').classList.toggle('locked', locked);
+        lockHint.textContent = locked ? 'Reset to change day or interval' : '';
+    }
+
+    function setStartButton(state) {
+        if (state === 'running') {
+            startBtn.textContent = 'Pause Timer';
+            startBtn.className = 'control-btn pause-btn';
+        } else {
+            startBtn.textContent = state === 'resume' ? 'Resume Timer' : 'Start Timer';
+            startBtn.className = 'control-btn start-btn';
+        }
+    }
+
+    /* ---------- Native helpers ---------- */
+    const isAndroid = isNative && window.Capacitor.getPlatform() === 'android';
+    const CHANNEL_ID = 'ferber-timer';
+    let channelReady = false;
+
+    // Android 8+ requires a notification channel; importance 5 = heads-up with sound
+    async function ensureAndroidChannel() {
+        const LN = Plugins.LocalNotifications;
+        if (!isAndroid || !LN || channelReady) return;
+        try {
+            await LN.createChannel({
+                id: CHANNEL_ID,
+                name: 'Timer alerts',
+                description: 'Alerts when a check-in interval ends',
+                importance: 5,
+                visibility: 1,
+                vibration: true,
+                lights: true
+            });
+            channelReady = true;
+        } catch (e) { console.warn('Channel creation failed', e); }
+    }
+
+    // Android 12+: exact alarms need a special permission or the alert can be delayed by Doze.
+    // Ask at most once, by sending the user to the system setting.
+    async function ensureExactAlarm() {
+        const LN = Plugins.LocalNotifications;
+        if (!isAndroid || !LN || !LN.checkExactNotificationSetting) return;
+        try {
+            const res = await LN.checkExactNotificationSetting();
+            if (res.exact_alarm === 'granted') return;
+            if (await loadKey('exactPrompted') === 'true') return;
+            await saveKey('exactPrompted', true);
+            await LN.changeExactNotificationSetting();
+        } catch (e) { /* older plugin or Android version; ignore */ }
+    }
+
+    async function scheduleEndNotification(atMs) {
+        const LN = Plugins.LocalNotifications;
+        if (!LN) return;
+        try {
+            let perm = await LN.checkPermissions();
+            if (perm.display !== 'granted') perm = await LN.requestPermissions();
+            if (perm.display !== 'granted') return;
+            await ensureAndroidChannel();
+            await ensureExactAlarm();
+            await LN.cancel({ notifications: [{ id: NOTIFICATION_ID }] });
+            await LN.schedule({
+                notifications: [{
+                    id: NOTIFICATION_ID,
+                    title: 'Check-in time',
+                    body: 'Your timer is done.',
+                    channelId: CHANNEL_ID,
+                    schedule: { at: new Date(atMs), allowWhileIdle: true }
+                }]
+            });
+        } catch (e) { console.warn('Notification schedule failed', e); }
+    }
+
+    async function cancelEndNotification() {
+        const LN = Plugins.LocalNotifications;
+        if (!LN) return;
+        try { await LN.cancel({ notifications: [{ id: NOTIFICATION_ID }] }); } catch (e) { /* ignore */ }
+    }
+
+    async function keepAwake(on) {
+        const KA = Plugins.KeepAwake;
+        if (!KA) return;
+        try { on ? await KA.keepAwake() : await KA.allowSleep(); } catch (e) { /* ignore */ }
+    }
+
+    async function buzz() {
+        const H = Plugins.Haptics;
+        try {
+            if (H) await H.vibrate({ duration: 600 });
+            else if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+        } catch (e) { /* ignore */ }
+    }
+
+    /* ---------- Timer logic (timestamp based, immune to drift and throttling) ---------- */
+    function applySetting() {
+        const minutes = ferberMatrix[selectedDay][selectedCheckIn];
+        totalSeconds = minutes * 60;
+        remainingMs = totalSeconds * 1000;
+        endTime = null;
+        isFinished = false;
+        timerCircle.classList.remove('finished');
+        setStartButton('start');
+        displayTime(totalSeconds);
+    }
+
+    function highlight(buttons, attr, value) {
+        buttons.forEach(btn => {
+            const active = Number(btn.dataset[attr]) === value;
+            btn.classList.toggle('active', active);
+            btn.setAttribute('aria-pressed', String(active));
+        });
+    }
+
+    function selectDay(day, persist = true) {
+        if (isRunning) return;
+        selectedDay = day;
+        highlight(dayButtons, 'day', day);
+        applySetting();
+        clearRunState();
+        if (persist) saveKey('day', day);
+    }
+
+    function selectCheckIn(index, persist = true) {
+        if (isRunning) return;
+        selectedCheckIn = index;
+        highlight(checkinButtons, 'checkin', index);
+        applySetting();
+        clearRunState();
+        if (persist) saveKey('checkin', index);
+    }
+
+    dayButtons.forEach(b => b.addEventListener('click', () => selectDay(Number(b.dataset.day))));
+    checkinButtons.forEach(b => b.addEventListener('click', () => selectCheckIn(Number(b.dataset.checkin))));
+
+    function tick() {
+        if (!isRunning || endTime === null) return;
+        const msLeft = endTime - Date.now();
+        if (msLeft <= 0) {
+            // If we were backgrounded and the notification already alerted the parent,
+            // don't blast the alarm late; just show the finished state.
+            finish(-msLeft > 2000);
+            return;
+        }
+        displayTime(Math.ceil(msLeft / 1000));
+    }
+
+    function startTimer() {
+        // Auto-reset if the previous run finished
+        if (isFinished) applySetting();
+
+        // Unlock audio on the user gesture
+        if (!audioCtx) {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (AC) audioCtx = new AC();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+
+        stopAlarm();
+        endTime = Date.now() + remainingMs;
+        isRunning = true;
+        setStartButton('running');
+        setLocked(true);
+
+        saveKey('endTime', endTime);
+        scheduleEndNotification(endTime);
+        keepAwake(true);
+
+        clearInterval(tickInterval);
+        tickInterval = setInterval(tick, 250);
+        tick();
+    }
+
+    function pauseTimer() {
+        if (isRunning && endTime !== null) {
+            remainingMs = Math.max(0, endTime - Date.now());
+        }
+        isRunning = false;
+        endTime = null;
+        clearInterval(tickInterval);
+        cancelEndNotification();
+        keepAwake(false);
+        clearRunState();
+        setLocked(false);
+        displayTime(Math.ceil(remainingMs / 1000));
+        setStartButton(remainingMs < totalSeconds * 1000 && remainingMs > 0 ? 'resume' : 'start');
+    }
+
+    function resetTimer() {
+        isRunning = false;
+        clearInterval(tickInterval);
+        stopAlarm();
+        cancelEndNotification();
+        keepAwake(false);
+        clearRunState();
+        setLocked(false);
+        applySetting();
+    }
+
+    function finish(playSound = true) {
+        isRunning = false;
+        isFinished = true;
+        endTime = null;
+        remainingMs = 0;
+        clearInterval(tickInterval);
+        clearRunState();
+        keepAwake(false);
+        setLocked(false);
+        displayTime(0);
+        timerCircle.classList.add('finished');
+        setStartButton('start');
+        statusRegion.textContent = 'Timer finished. Time for check-in.';
+
+        if (playSound) {
+            buzz();
+            if (!isMuted) playAlarm();
+        }
+    }
+
+    function clearRunState() { removeKey('endTime'); }
+
+    startBtn.addEventListener('click', () => (isRunning ? pauseTimer() : startTimer()));
+    $('resetBtn').addEventListener('click', resetTimer);
+
+    /* ---------- Alarm: ~10 seconds of beeps, stops on Reset/Start/Mute ---------- */
+    function playAlarm() {
+        if (!audioCtx) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+
+        stopAlarm();
+        const now = audioCtx.currentTime;
+        const BEEPS = 10;
+        for (let i = 0; i < BEEPS; i++) {
+            const start = now + i * 1.0;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, start);
+            // short ramps avoid audible clicks
+            gain.gain.setValueAtTime(0, start);
+            gain.gain.linearRampToValueAtTime(0.35, start + 0.03);
+            gain.gain.setValueAtTime(0.35, start + 0.55);
+            gain.gain.linearRampToValueAtTime(0, start + 0.6);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(start);
+            osc.stop(start + 0.65);
+            alarmNodes.push(osc);
+        }
+    }
+
+    function stopAlarm() {
+        alarmNodes.forEach(osc => { try { osc.stop(); } catch (e) { /* already stopped */ } });
+        alarmNodes = [];
+    }
+
+    /* ---------- Resync when the app returns to the foreground ---------- */
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
+    if (Plugins.App && Plugins.App.addListener) {
+        Plugins.App.addListener('appStateChange', ({ isActive }) => {
+            if (isActive) {
+                // Android can suspend the AudioContext while backgrounded
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+                tick();
+            }
+        });
+
+        // Android hardware/gesture back: minimize instead of closing, so a running timer isn't killed
+        Plugins.App.addListener('backButton', () => {
+            if (Plugins.App.minimizeApp) Plugins.App.minimizeApp();
+            else Plugins.App.exitApp();
+        });
+    }
+
+    /* ---------- Init: restore saved settings and any in-progress run ---------- */
+    async function init() {
+        const [theme, muted, day, checkin, savedEnd] = await Promise.all([
+            loadKey('theme'), loadKey('muted'), loadKey('day'), loadKey('checkin'), loadKey('endTime')
+        ]);
+
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setTheme(theme || (prefersDark ? 'dark' : 'light'), false);
+        setMuted(muted === 'true', false);
+
+        const d = Number(day), c = Number(checkin);
+        if (d >= 1 && d <= 7) { selectedDay = d; highlight(dayButtons, 'day', d); }
+        if (c >= 1 && c <= 4) { selectedCheckIn = c; highlight(checkinButtons, 'checkin', c); }
+        applySetting();
+
+        // Resume a run that was in progress when the app was closed or killed
+        const end = Number(savedEnd);
+        if (end) {
+            if (end > Date.now()) {
+                isRunning = true;
+                endTime = end;
+                setStartButton('running');
+                setLocked(true);
+                keepAwake(true);
+                tickInterval = setInterval(tick, 250);
+                tick();
+            } else {
+                finish(false); // finished while away; the notification already alerted them
+            }
+        }
+    }
+
+    init();
+</script>
+
+</body>
+</html>

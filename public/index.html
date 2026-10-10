@@ -21,39 +21,39 @@
         body, html {
             width: 100%;
             height: 100%;
-            overflow: hidden; /* Prevents scrolling */
-            background-color: transparent !important; /* Allows native AdMob layer underneath to show */
+            overflow: hidden;
+            background-color: transparent !important;
         }
 
         .app-container {
             display: flex;
             flex-direction: column;
-            height: calc(100vh);
+            height: 100vh;
             max-width: 480px;
             margin: 0 auto;
-            padding: 16px;
+            padding: 24px 20px;
             justify-content: space-between;
-            background-color: #f8f9fa; /* Restores app background color */
+            background-color: #F7F7F8; /* Wealthsimple-style clean light grey */
         }
 
         /* TOP SECTION */
         .top-section {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 20px;
         }
 
         .header-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 4px;
         }
 
         .title {
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 700;
-            color: #333;
+            color: #111111;
+            letter-spacing: -0.3px;
         }
 
         .mute-btn {
@@ -61,74 +61,79 @@
             border: none;
             cursor: pointer;
             padding: 4px;
-            color: #4a5568;
+            color: #111111;
             outline: none;
         }
 
         .mute-btn svg {
-            width: 26px;
-            height: 26px;
+            width: 24px;
+            height: 24px;
             fill: currentColor;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #71717A;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .btn-group {
             display: flex;
-            justify-content: space-between;
-            gap: 4px;
+            background-color: #E4E4E7;
+            padding: 3px;
+            border-radius: 99px; /* Fully rounded capsule container */
+            gap: 3px;
         }
 
-        .btn-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #666;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* Day Buttons - Seafoam Green */
+        /* Day Buttons */
         .day-btn {
             flex: 1;
-            padding: 10px 0;
+            padding: 8px 0;
             border: none;
-            border-radius: 8px;
-            background-color: #a8e6cf;
-            color: #1b4332;
-            font-weight: 700;
-            font-size: 0.9rem;
+            border-radius: 99px;
+            background-color: transparent;
+            color: #71717A;
+            font-weight: 600;
+            font-size: 0.85rem;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .day-btn.active {
-            background-color: #2d6a4f;
-            color: #ffffff;
-            transform: scale(1.05);
+            background-color: #FFFFFF;
+            color: #111111;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
-        /* Check-in Buttons - Purple */
+        /* Check-in Buttons */
         .checkin-btn {
             flex: 1;
-            padding: 10px 0;
+            padding: 8px 0;
             border: none;
-            border-radius: 8px;
-            background-color: #d8b4fe;
-            color: #3b0764;
-            font-weight: 700;
-            font-size: 0.8rem;
+            border-radius: 99px;
+            background-color: transparent;
+            color: #71717A;
+            font-weight: 600;
+            font-size: 0.75rem;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .checkin-btn.active {
-            background-color: #6b21a8;
-            color: #ffffff;
-            transform: scale(1.05);
+            background-color: #FFFFFF;
+            color: #111111;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
-        /* MIDDLE SECTION - Centered relative to screen height */
+        /* MIDDLE SECTION */
         .middle-section {
             flex: 1;
             display: flex;
@@ -138,75 +143,79 @@
         }
 
         .timer-circle {
-            width: 68vw;
-            height: 68vw;
-            max-width: 280px;
-            max-height: 280px;
+            width: 65vw;
+            height: 65vw;
+            max-width: 260px;
+            max-height: 260px;
             border-radius: 50%;
-            border: 8px solid #cbd5e1;
+            border: 4px solid #E4E4E7;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #ffffff;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            background-color: #FFFFFF;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.03);
             transition: background-color 0.4s ease, border-color 0.4s ease;
         }
 
         .timer-circle.finished {
-            background-color: #81c784;
-            border-color: #388e3c;
+            background-color: #111111;
+            border-color: #111111;
         }
 
         .timer-display {
-            font-size: 3.8rem;
-            font-weight: 800;
-            color: #1e293b;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #111111;
             font-variant-numeric: tabular-nums;
-            line-height: 1;
+            letter-spacing: -1px;
         }
 
         .timer-circle.finished .timer-display {
-            color: #ffffff;
-        }
-
-        /* Logo Cursive Branding - Located directly under the timer circle */
-        .brand-logo {
-            font-family: 'Brush Script MT', 'Comic Sans MS', 'Dancing Script', cursive;
-            font-size: 1.25rem;
-            color: #64748b;
-            margin-top: 14px;
-            font-style: italic;
-            letter-spacing: 0.5px;
+            color: #FFFFFF;
         }
 
         /* BOTTOM SECTION / CONTROLS */
         .controls {
             display: flex;
+            flex-direction: column;
             gap: 12px;
             width: 100%;
-            max-width: 320px;
-            margin: 0 auto;
-            padding-bottom: 8px;
         }
 
         .control-btn {
-            flex: 1;
-            padding: 14px;
+            width: 100%;
+            padding: 16px;
             border: none;
-            border-radius: 10px;
-            font-size: 1.05rem;
-            font-weight: 700;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
-            color: white;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.1s ease, opacity 0.2s ease;
         }
 
-        .start-btn { background-color: #3b82f6; }
-        .pause-btn { background-color: #f59e0b; }
-        .reset-btn { background-color: #ef4444; }
+        .start-btn { 
+            background-color: #111111; 
+            color: #FFFFFF; 
+        }
 
-        .control-btn:active {
-            transform: translateY(1px);
+        .pause-btn { 
+            background-color: #71717A; 
+            color: #FFFFFF; 
+        }
+
+        .reset-btn {
+            background: none;
+            border: none;
+            color: #71717A;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        .control-btn:active, .reset-btn:active {
+            opacity: 0.8;
+            transform: scale(0.98);
         }
     </style>
 </head>
@@ -215,9 +224,9 @@
 
 <div class="app-container">
     <!-- TOP SECTION -->
-    <div class="top-section" style="margin-top: 35px;">
+    <div class="top-section" style="margin-top: 10px;">
         <div class="header-row">
-            <div class="title">Ferber Method Timer v.13</div>
+            <div class="title">Ferber Method</div>
             <button class="mute-btn" id="muteToggle" aria-label="Toggle Sound">
                 <!-- Speaker Unmuted Icon -->
                 <svg id="iconUnmuted" viewBox="0 0 24 24">
@@ -231,7 +240,7 @@
         </div>
 
         <!-- Day Selection Buttons -->
-        <div>
+        <div class="control-group">
             <div class="btn-label">Day</div>
             <div class="btn-group">
                 <button class="day-btn active" onclick="selectDay(1)">1</button>
@@ -245,7 +254,7 @@
         </div>
 
         <!-- Check-In Selection Buttons -->
-        <div>
+        <div class="control-group">
             <div class="btn-label">Check-In Interval</div>
             <div class="btn-group">
                 <button class="checkin-btn active" onclick="selectCheckIn(1)">1st</button>
@@ -262,21 +271,16 @@
             <div class="timer-display" id="timerDisplay">03:00</div>
         </div>        
     </div>
-        
 
     <!-- BOTTOM SECTION -->
-    <div>
-        <div class="controls">
-            <button class="control-btn start-btn" id="startBtn" onclick="toggleTimer()">Start</button>
-            <button class="control-btn reset-btn" onclick="resetTimer()">Reset</button>
-        </div>        
+    <div class="controls">
+        <button class="control-btn start-btn" id="startBtn" onclick="toggleTimer()">Start Timer</button>
+        <button class="reset-btn" onclick="resetTimer()">Reset</button>
     </div>
 
 </div>
 
 <script>
-    // Ferber Method Time Matrix (Minutes)
-    // Map format: [Day][CheckInIndex (1-4)] = Minutes
     const ferberMatrix = {
         1: { 1: 3,  2: 5,  3: 10, 4: 10 },
         2: { 1: 5,  2: 10, 3: 12, 4: 12 },
@@ -289,13 +293,11 @@
 
     let selectedDay = 1;
     let selectedCheckIn = 1;
-    let totalSeconds = 180; // Default 3 mins
+    let totalSeconds = 180;
     let remainingSeconds = 180;
     let timerInterval = null;
     let isRunning = false;
     let isMuted = false;
-
-    // Web Audio API context for generating tone without external MP3 files
     let audioCtx = null;
 
     const timerDisplay = document.getElementById('timerDisplay');
@@ -348,13 +350,12 @@
     function startTimer() {
         if (remainingSeconds <= 0) return;
         
-        // Initialize Web Audio API on user interaction
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
 
         isRunning = true;
-        startBtn.textContent = 'Pause';
+        startBtn.textContent = 'Pause Timer';
         startBtn.className = 'control-btn pause-btn';
         
         timerInterval = setInterval(() => {
@@ -371,7 +372,7 @@
     function pauseTimer() {
         isRunning = false;
         clearInterval(timerInterval);
-        startBtn.textContent = 'Start';
+        startBtn.textContent = 'Start Timer';
         startBtn.className = 'control-btn start-btn';
     }
 
@@ -384,7 +385,7 @@
 
     function timerFinished() {
         isRunning = false;
-        startBtn.textContent = 'Start';
+        startBtn.textContent = 'Start Timer';
         startBtn.className = 'control-btn start-btn';
         timerCircle.classList.add('finished');
         
@@ -393,11 +394,8 @@
         }
     }
 
-    // Audio Generation - Plays a 3-second beep sequence
     function playAlarm() {
         if (!audioCtx) return;
-        
-        // Resume context if suspended by browser autoplay policies
         if (audioCtx.state === 'suspended') {
             audioCtx.resume();
         }
@@ -407,9 +405,8 @@
         const gain = audioCtx.createGain();
 
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, now); // 880Hz (A5 tone)
+        osc.frequency.setValueAtTime(880, now);
 
-        // Beep pattern over 3 seconds
         gain.gain.setValueAtTime(0, now);
         for (let i = 0; i < 3; i++) {
             gain.gain.setValueAtTime(0.3, now + i);
@@ -420,10 +417,9 @@
         gain.connect(audioCtx.destination);
 
         osc.start(now);
-        osc.stop(now + 3); // Automatically stop after 3 seconds
+        osc.stop(now + 3);
     }
 
-    // Mute Switch Logic
     muteToggle.addEventListener('click', () => {
         isMuted = !isMuted;
         if (isMuted) {
@@ -435,10 +431,7 @@
         }
     });
 
-    // Initialize display on startup
     displayTime(remainingSeconds);
-
-    
 </script>
 
 </body>

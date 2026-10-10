@@ -365,10 +365,12 @@
     const iconMoon = document.getElementById('iconMoon');
     const iconSun = document.getElementById('iconSun');
 
-    /* --- THEME TOGGLE LOGIC --- */
+    /* --- IN-MEMORY THEME TOGGLE LOGIC --- */
+    let currentTheme = 'light';
+
     function setTheme(theme) {
+        currentTheme = theme;
         document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
         if (theme === 'dark') {
             iconMoon.style.display = 'none';
             iconSun.style.display = 'block';
@@ -378,14 +380,9 @@
         }
     }
 
-    // Load saved theme or default to light
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    setTheme(savedTheme);
-
     themeToggle.addEventListener('click', () => {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        setTheme(newTheme);
+        const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        setTheme(nextTheme);
     });
 
     /* --- TIMER LOGIC --- */

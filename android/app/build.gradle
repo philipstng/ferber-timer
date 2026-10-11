@@ -50,8 +50,6 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation("com.google.android.gms:play-services-ads:25.5.0")
-    // Added: standard Capacitor line for Cordova-based plugins
-    implementation project(':capacitor-cordova-android-plugins')
 }
 
 // Added: pulls in your Capacitor plugins (local notifications, preferences, haptics,

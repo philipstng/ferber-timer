@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Ferber Sleep Training Timer</title>
+
+    <!-- REQUIRED FOR CAPACITOR NATIVE BRIDGE -->
+    <script src="capacitor.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #F7F7F8;
+            --card-bg: #FFFFFF;
+            --text-primary: #111111;
+            --text-secondary: #71717A;
+            --control-bg: #E4E4E7;
+            --active-pill-bg: #FFFFFF;
+            --active-pill-text: #111111;
+            --border-color: #E4E4E7;
+            --btn-primary-bg: #111111;
+            --btn-primary-text: #FFFFFF;
+            --btn-pause-bg: #71717A;
+            --shadow-color: rgba(0, 0, 0, 0.05);
+            --finished-bg: #22C55E;
+            --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Charter, Georgia, "Times New Roman", serif;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0D0D0E;
+            --card-bg: #18181B;
+            --text-primary: #F4F4F5;
+            --text-secondary: #A1A1AA;
+            --control-bg: #27272A;
+            --active-pill-bg: #3F3F46;
+            --active-pill-text: #FFFFFF;
+            --border-color: #27272A;
+            --btn-primary-bg: #FFFFFF;
+            --btn-primary-text: #111111;
+            --btn-pause-bg: #3F3F46;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            /* Dimmer green so it isn't harsh in a dark nursery */
+            --finished-bg: #166534;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Transitions scoped to the elements that actually change */
+        body, .app-container, .btn-group, .day-btn, .checkin-btn, .timer-circle,
+        .timer-display, .control-btn, .title, .btn-label, .icon-btn {
+            transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+        }
+
+        button {
+            user-select: none; -webkit-user-select: none; font: inherit;
+            touch-action: manipulation; /* removes tap delay / double-tap zoom in Android WebView */
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            overscroll-behavior: none; /* no pull-to-refresh glow / bounce in Android WebView */
+            background-color: var(--bg-color);
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            max-width: 480px;
+            margin: 0 auto;
+            padding: calc(24px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right))
+                     calc(24px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));
+            justify-content: space-between;
+            background-color: var(--bg-color);
+        }
+
+        .top-section { display: flex; flex-direction: column; gap: 20px; margin-top: 10px; }
+
+        .header-row { display: flex; justify-content: space-between; align-items: center; }
+
+        .title { font-size: 1.1rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; }
+
+        .header-actions { display: flex; align-items: center; gap: 8px; }
+
+        .icon-btn {
+            background: none; border: none; cursor: pointer; padding: 8px;
+            color: var(--text-primary); outline: none;
+            display: flex; align-items: center; justify-content: center; border-radius: 50%;
+        }
+        .icon-btn:focus-visible, .day-btn:focus-visible, .checkin-btn:focus-visible,
+        .control-btn:focus-visible, .reset-btn:focus-visible, .script-btn:focus-visible, .info-btn:focus-visible,
+        .size-btn:focus-visible, .sheet-btn:focus-visible, .script-textarea:focus-visible {
+            outline: 2px solid var(--text-secondary); outline-offset: 2px;
+        }
+        .icon-btn svg { width: 22px; height: 22px; fill: currentColor; }
+
+        .control-group { display: flex; flex-direction: column; gap: 8px; }
+
+        .btn-label {
+            font-size: 0.7rem; font-weight: 700; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .btn-group {
+            display: flex; background-color: var(--control-bg);
+            padding: 3px; border-radius: 99px; gap: 3px;
+        }
+        .btn-group.locked { opacity: 0.55; }
+
+        .day-btn, .checkin-btn {
+            flex: 1; padding: 10px 0; border: none; border-radius: 99px;
+            background-color: transparent; color: var(--text-secondary);
+            font-weight: 600; cursor: pointer;
+        }
+        .day-btn { font-size: 0.85rem; }
+        .checkin-btn { font-size: 0.75rem; }
+        .day-btn:disabled, .checkin-btn:disabled { cursor: not-allowed; }
+
+        .day-btn.active, .checkin-btn.active {
+            background-color: var(--active-pill-bg);
+            color: var(--active-pill-text);
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+
+        .lock-hint {
+            font-size: 0.7rem; color: var(--text-secondary); text-align: center;
+            min-height: 1em; margin-top: -8px;
+        }
+
+        /* ---------- Script button ---------- */
+        .script-row { display: flex; justify-content: space-between; align-items: center; margin-top: -6px; }
+
+        .info-btn {
+            width: 34px; height: 34px; border: none; border-radius: 50%;
+            display: inline-flex; align-items: center; justify-content: center;
+            background-color: var(--control-bg); color: var(--text-secondary);
+            font-family: Georgia, "Times New Roman", serif; font-style: italic;
+            font-weight: 700; font-size: 1.1rem; line-height: 1; cursor: pointer;
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+
+        .script-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 14px; border: none; border-radius: 99px;
+            background-color: var(--control-bg); color: var(--text-secondary);
+            font-size: 0.8rem; font-weight: 600; cursor: pointer;
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+        .script-btn svg { width: 16px; height: 16px; fill: currentColor; }
+        .script-btn.has-script { color: var(--text-primary); }
+        .script-dot {
+            display: none; width: 7px; height: 7px; border-radius: 50%;
+            background-color: currentColor;
+        }
+        .script-btn.has-script .script-dot { display: inline-block; }
+
+        /* ---------- Script sheet ---------- */
+        .sheet-backdrop {
+            position: fixed; inset: 0; z-index: 10;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0s linear 0.25s;
+        }
+        .sheet-backdrop.open { opacity: 1; visibility: visible; transition: opacity 0.25s ease; }
+
+        .sheet {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 11;
+            width: 100%; max-width: 480px; margin: 0 auto;
+            height: 85vh; height: 85dvh;
+            display: flex; flex-direction: column; gap: 12px;
+            padding: 16px calc(20px + env(safe-area-inset-right))
+                     calc(16px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));
+            background-color: var(--card-bg); color: var(--text-primary);
+            border-radius: 24px 24px 0 0;
+            box-shadow: 0 -12px 32px var(--shadow-color);
+            transform: translateY(100%); visibility: hidden;
+            transition: transform 0.3s ease, visibility 0s linear 0.3s;
+            outline: none;
+        }
+        .sheet.open { transform: translateY(0); visibility: visible; transition: transform 0.3s ease; }
+
+        .sheet-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .sheet-title { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.3px; }
+        .sheet-timer {
+            display: none; margin-left: 8px; font-size: 0.85rem; font-weight: 600;
+            color: var(--text-secondary); font-variant-numeric: tabular-nums;
+        }
+        .sheet.read .sheet-timer, .sheet.show-timer .sheet-timer { display: inline; }
+        .sheet-tools { display: flex; align-items: center; gap: 4px; }
+
+        .size-group {
+            display: flex; background-color: var(--control-bg);
+            border-radius: 99px; padding: 3px; gap: 3px;
+        }
+        .size-btn {
+            min-width: 40px; padding: 6px 10px; border: none; border-radius: 99px;
+            background: transparent; color: var(--text-primary);
+            font-weight: 700; cursor: pointer;
+        }
+        #sizeDown { font-size: 0.8rem; }
+        #sizeUp { font-size: 1.05rem; }
+        .size-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        .script-textarea, .script-reader {
+            flex: 1; min-height: 0; width: 100%;
+            font-size: var(--script-size, 22px); line-height: 1.6;
+            color: var(--text-primary);
+        }
+        .script-textarea {
+            resize: none; padding: 14px; border: 1px solid var(--border-color);
+            border-radius: 16px; background-color: var(--bg-color);
+        }
+        .script-textarea::placeholder { color: var(--text-secondary); }
+        .script-reader {
+            overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+            white-space: pre-wrap; overflow-wrap: break-word; padding: 4px 2px;
+        }
+        .script-reader.empty { font-size: 1rem; color: var(--text-secondary); }
+
+        .sheet:not(.read) .script-reader { display: none; }
+        .sheet.read .script-textarea, .sheet.read .sheet-footer { display: none; }
+
+        .sheet-footer { display: flex; gap: 12px; }
+        .sheet-btn {
+            flex: 1; padding: 14px; border: none; border-radius: 16px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+        }
+        .sheet-btn.secondary { background-color: var(--control-bg); color: var(--text-primary); }
+        .sheet-btn.primary { background-color: var(--btn-primary-bg); color: var(--btn-primary-text); }
+
+        /* ---------- Info sheet ---------- */
+        .info-body {
+            flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch; padding: 2px 2px 12px;
+            font-size: 0.95rem; line-height: 1.6; color: var(--text-primary); outline: none;
+        }
+        /* Elegant serif for the explanation (the global * rule sets fonts per element, so target children too) */
+        .info-body, .info-body *, #infoTitle { font-family: var(--serif); }
+        .info-body { font-size: 1.02rem; }
+        .info-body h3 {
+            margin: 22px 0 8px; font-size: 0.7rem; font-weight: 700;
+            color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;
+        }
+        .info-body p { margin-bottom: 10px; }
+        .info-body ol, .info-body ul { margin: 0 0 10px; padding-left: 22px; }
+        .info-body li { margin-bottom: 8px; }
+        .info-notice {
+            padding: 12px 14px; border-radius: 14px;
+            background-color: var(--control-bg); font-size: 0.9rem;
+        }
+        .info-body .small { font-size: 0.85rem; color: var(--text-secondary); }
+
+        .wait-table {
+            width: 100%; border-collapse: separate; border-spacing: 0;
+            text-align: center; font-size: 0.9rem; font-variant-numeric: tabular-nums;
+        }
+        .wait-table caption {
+            text-align: left; padding-bottom: 8px;
+            font-size: 0.85rem; color: var(--text-secondary);
+        }
+        .wait-table th, .wait-table td { padding: 8px 4px; border-bottom: 1px solid var(--border-color); }
+        .wait-table thead th {
+            font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+        .wait-table tr.current th, .wait-table tr.current td {
+            background-color: var(--control-bg); font-weight: 700; border-bottom-color: transparent;
+        }
+        .wait-table tr.current th { border-radius: 10px 0 0 10px; }
+        .wait-table tr.current td:last-child { border-radius: 0 10px 10px 0; }
+
+        .middle-section {
+            flex: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; margin-bottom: 16px;
+        }
+
+        .timer-circle {
+            width: 65vw; height: 65vw; max-width: 260px; max-height: 260px;
+            border-radius: 50%; border: 4px solid var(--border-color);
+            display: flex; justify-content: center; align-items: center;
+            background-color: var(--card-bg);
+            box-shadow: 0 12px 32px var(--shadow-color);
+        }
+        .timer-circle.finished { background-color: var(--finished-bg); border-color: var(--finished-bg); }
+
+        .timer-display {
+            font-size: 3.5rem; font-weight: 700; color: var(--text-primary);
+            font-variant-numeric: tabular-nums; letter-spacing: -1px;
+        }
+        
+        .timer-circle.finished .timer-display { color: #FFFFFF; }
+
+        .controls { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+
+        .control-btn {
+            width: 100%; padding: 16px; border: none; border-radius: 16px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+        }
+        .start-btn { background-color: var(--btn-primary-bg); color: var(--btn-primary-text); }
+        .pause-btn { background-color: var(--btn-pause-bg); color: #FFFFFF; }
+
+        .reset-btn {
+            background: none; border: none; color: var(--text-secondary);
+            font-size: 0.9rem; font-weight: 600; padding: 10px; cursor: pointer;
+        }
+
+        .control-btn:active, .reset-btn:active, .icon-btn:active,
+        .script-btn:active, .info-btn:active, .size-btn:active, .sheet-btn:active { opacity: 0.8; transform: scale(0.98); }
+
+        .sr-only {
+            position: absolute; width: 1px; height: 1px; overflow: hidden;
+            clip: rect(0 0 0 0); white-space: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app-container">
+    <!-- TOP SECTION -->
+    <div class="top-section">
+        <div class="header-row">
+            <div class="title">Ferber Method</div>
+            <div class="header-actions">
+                <button type="button" class="icon-btn" id="themeToggle" aria-label="Switch to dark mode">
+                    <svg id="iconMoon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12.3 2a10 10 0 0 0 9.7 11.6 10 10 0 1 1-11.6-9.7z"/>
+                    </svg>
+                    <svg id="iconSun" viewBox="0 0 24 24" style="display: none;" aria-hidden="true">
+                        <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zm-9-8c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1v2c0 .55.45 1 1 1zm0 16c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1zM5.64 7.05c.39-.39.39-1.02 0-1.41L4.22 4.22c-.39-.39-1.02-.39-1.41 0s-.39 1.02 0 1.41l1.42 1.42c.39.39 1.02.39 1.41 0zm12.72 12.72c.39-.39.39-1.02 0-1.41l-1.42-1.42c-.39-.39-1.02-.39-1.41 0s-.39 1.02 0 1.41l1.42 1.42c.39.39 1.02.39 1.41 0zM7.05 18.36l-1.42 1.42c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.42-1.42c.39-.39.39-1.02 0-1.41-.39-.38-1.03-.38-1.41 0zm12.72-12.72l-1.42 1.42c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.42-1.42c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0z"/>
+                    </svg>
+                </button>
+                <button type="button" class="icon-btn" id="muteToggle" aria-label="Mute alarm sound" aria-pressed="false">
+                    <svg id="iconUnmuted" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                    </svg>
+                    <svg id="iconMuted" viewBox="0 0 24 24" style="display: none;" aria-hidden="true">
+                        <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="btn-label" id="dayLabel">Day</div>
+            <div class="btn-group" id="dayGroup" role="group" aria-labelledby="dayLabel">
+                <button type="button" class="day-btn active" data-day="1" aria-pressed="true">1</button>
+                <button type="button" class="day-btn" data-day="2" aria-pressed="false">2</button>
+                <button type="button" class="day-btn" data-day="3" aria-pressed="false">3</button>
+                <button type="button" class="day-btn" data-day="4" aria-pressed="false">4</button>
+                <button type="button" class="day-btn" data-day="5" aria-pressed="false">5</button>
+                <button type="button" class="day-btn" data-day="6" aria-pressed="false">6</button>
+                <button type="button" class="day-btn" data-day="7" aria-pressed="false">7</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="btn-label" id="checkinLabel">Check-In Interval</div>
+            <div class="btn-group" id="checkinGroup" role="group" aria-labelledby="checkinLabel">
+                <button type="button" class="checkin-btn active" data-checkin="1" aria-pressed="true">1st</button>
+                <button type="button" class="checkin-btn" data-checkin="2" aria-pressed="false">2nd</button>
+                <button type="button" class="checkin-btn" data-checkin="3" aria-pressed="false">3rd</button>
+                <button type="button" class="checkin-btn" data-checkin="4" aria-pressed="false">Subseq.</button>
+            </div>
+        </div>
+        <div class="lock-hint" id="lockHint"></div>
+
+        <div class="script-row">
+            <button type="button" class="info-btn" id="infoBtn" aria-haspopup="dialog" aria-label="How the Ferber Method works">i</button>
+
+            <button type="button" class="script-btn" id="scriptBtn" aria-haspopup="dialog" aria-label="Add a script">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                </svg>
+                <span>Script</span>
+                <span class="script-dot" aria-hidden="true"></span>
+            </button>
+        </div>
+    </div>
+
+    <!-- MIDDLE SECTION -->
+    <div class="middle-section">
+        <div class="timer-circle" id="timerCircle">
+            <div class="timer-display" id="timerDisplay" role="timer" aria-live="off">03:00</div>
+        </div>
+    </div>
+
+    <!-- BOTTOM SECTION -->
+    <div class="controls">
+        <button type="button" class="control-btn start-btn" id="startBtn">Start Timer</button>
+        <button type="button" class="reset-btn" id="resetBtn">Reset</button>
+    </div>
+
+    <!-- Announces completion to screen readers without chatter every second -->
+    <div class="sr-only" id="statusRegion" role="status" aria-live="polite"></div>
+</div>
+
+<!-- SCRIPT SHEET: edit mode when the timer is idle, read mode while it runs -->
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+<div class="sheet" id="scriptSheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" tabindex="-1">
+    <div class="sheet-header">
+        <div>
+            <span class="sheet-title" id="sheetTitle">Your script</span>
+            <span class="sheet-timer" id="sheetTimer" aria-hidden="true">03:00</span>
+        </div>
+        <div class="sheet-tools">
+            <div class="size-group" role="group" aria-label="Text size">
+                <button type="button" class="size-btn" id="sizeDown" aria-label="Decrease text size">A&minus;</button>
+                <button type="button" class="size-btn" id="sizeUp" aria-label="Increase text size">A+</button>
+            </div>
+            <button type="button" class="icon-btn" id="sheetClose" aria-label="Close script">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <textarea class="script-textarea" id="scriptInput" aria-label="Script text"
+              placeholder="Paste or type what you'd like to read to your baby…"></textarea>
+    <div class="script-reader" id="scriptReader" tabindex="0" aria-label="Script"></div>
+
+    <div class="sheet-footer">
+        <button type="button" class="sheet-btn secondary" id="scriptClear">Clear</button>
+        <button type="button" class="sheet-btn primary" id="scriptSave">Save</button>
+    </div>
+</div>
+
+<!-- INFO SHEET: static explanation; the wait-times table is filled from ferberMatrix -->
+<div class="sheet" id="infoSheet" role="dialog" aria-modal="true" aria-labelledby="infoTitle" tabindex="-1">
+    <div class="sheet-header">
+        <div>
+            <span class="sheet-title" id="infoTitle">The Ferber Method</span>
+            <span class="sheet-timer" id="infoTimer" aria-hidden="true">03:00</span>
+        </div>
+        <button type="button" class="icon-btn" id="infoClose" aria-label="Close information">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+        </button>
+    </div>
+
+    <div class="info-body" id="infoBody" tabindex="0">
+        <p class="info-notice"><strong>General information only. This is not medical advice.</strong>
+            Please talk to your child's pediatrician before starting any sleep-training method.</p>
+
+        <h3>What it is</h3>
+        <p>The Ferber method, sometimes called "graduated check-ins," is one approach some families use to help a baby learn to fall asleep independently. The baby is put down drowsy but awake and the parent leaves the room. If the baby cries, the parent waits a set amount of time, then makes a brief, calm visit before leaving again. The waits get gradually longer.</p>
+
+        <h3>How a night can go</h3>
+        <ol>
+            <li>Follow your usual bedtime routine, then place your baby down drowsy but awake.</li>
+            <li>Say goodnight, leave the room, and start the timer.</li>
+            <li>When it ends, if your baby is still upset, go in for a brief check-in of about 1&ndash;2 minutes. Speak softly and offer reassurance. The method generally avoids picking the baby up.</li>
+            <li>Leave and start the next timer, which will be a little longer.</li>
+            <li>Repeat until your baby falls asleep. Many versions of the method restart the waits from the first interval after a night waking, but your pediatrician may suggest something different.</li>
+        </ol>
+
+        <h3>Using this timer</h3>
+        <ul>
+            <li><strong>Day</strong> is which day of the plan you are on (1&ndash;7). Later days use longer waits.</li>
+            <li><strong>Check-In Interval</strong> is which wait you are on: 1st, 2nd, 3rd, then "Subseq." for every wait after the third.</li>
+            <li>Tap <strong>Start</strong> when you leave the room. When time is up, the app sounds an alarm and sends a notification.</li>
+            <li>After a check-in, choose the next interval and tap Start again.</li>
+            <li><strong>Script</strong> is optional. Write something calm to say or read to your baby, and open it while the timer runs.</li>
+            <li>Day and interval are locked while the timer runs. Tap <strong>Reset</strong> to change them.</li>
+        </ul>
+
+        <h3>Example wait times</h3>
+        <table class="wait-table">
+            <caption>Minutes to wait before each check-in. The day currently selected in the timer is highlighted.</caption>
+            <thead>
+                <tr><th scope="col">Day</th><th scope="col">1st</th><th scope="col">2nd</th><th scope="col">3rd</th><th scope="col">Subseq.</th></tr>
+            </thead>
+            <tbody id="waitTableBody"></tbody>
+        </table>
+        <p class="small">These are example times based on commonly published versions of the method. They are not a personalized recommendation, and your pediatrician may suggest different times.</p>
+
+        <h3>Important information</h3>
+        <ul>
+            <li>This app provides general information for convenience only. It is not medical, health, or professional advice and does not replace the advice of your child's pediatrician or other qualified health professional.</li>
+            <li>Sleep training is not right for every baby or family. Ask your pediatrician whether it is appropriate for your baby's age, health, and circumstances before you start, and follow their guidance if it differs from anything here.</li>
+            <li>Do not use this method if your baby is ill, in pain, or going through a significant change unless your pediatrician has said it is okay.</li>
+            <li>Go to your baby right away if you are worried about their safety or health. In an emergency, call your local emergency number.</li>
+            <li>Always follow current safe-sleep guidance from your pediatrician or health authority, such as placing your baby on their back on a firm, flat surface with no loose bedding or soft objects.</li>
+            <li>The timer and its alerts may not work as expected. For example, the device may be off, in low-power or silent mode, have notifications blocked, or the app may be closed or have a fault. Never rely on this app alone to keep track of or monitor your baby.</li>
+            <li>Results vary and no outcome is guaranteed.</li>
+            <li>This app is independent and is not affiliated with or endorsed by Dr. Richard Ferber or his publishers.</li>
+            <li>You use this app and its information at your own risk. To the fullest extent permitted by law, the developer is not liable for any loss, injury, or damage arising from its use or from reliance on this information.</li>
+        </ul>
+    </div>
+
+    <div class="sheet-footer">
+        <button type="button" class="sheet-btn primary" id="infoDone">Got it</button>
+    </div>
+</div>
+
+<script>
+    const ferberMatrix = {
+        1: { 1: 3,  2: 5,  3: 10, 4: 10 },
+        2: { 1: 5,  2: 10, 3: 12, 4: 12 },
+        3: { 1: 10, 2: 12, 3: 15, 4: 15 },
+        4: { 1: 12, 2: 15, 3: 17, 4: 17 },
+        5: { 1: 15, 2: 17, 3: 20, 4: 20 },
+        6: { 1: 17, 2: 20, 3: 25, 4: 25 },
+        7: { 1: 20, 2: 25, 3: 30, 4: 30 }
+    };
+
+    const NOTIFICATION_ID = 1;
+
+    /* ---------- Native plugin access (all guarded so it still works in a browser) ---------- */
+    const Plugins = (window.Capacitor && window.Capacitor.Plugins) || {};
+    const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+
+    /* ---------- State ---------- */
+    let selectedDay = 1;
+    let selectedCheckIn = 1;
+    let totalSeconds = 180;
+    let remainingMs = 180000;      // authoritative when paused / idle
+    let endTime = null;            // authoritative when running (epoch ms)
+    let tickInterval = null;
+    let isRunning = false;
+    let isFinished = false;
+    let isMuted = false;
+    let currentTheme = 'light';
+    let audioCtx = null;
+    let alarmNodes = [];
+    let scriptText = '';
+    let scriptSize = 22;           // px, used for both the editor and the read view
+    let activeSheet = null;        // the sheet currently open (script or info), or null
+    let activeOpener = null;       // the button that opened it, so focus can return there
+
+    /* ---------- Elements ---------- */
+    const $ = (id) => document.getElementById(id);
+    const timerDisplay = $('timerDisplay');
+    const timerCircle = $('timerCircle');
+    const startBtn = $('startBtn');
+    const muteToggle = $('muteToggle');
+    const themeToggle = $('themeToggle');
+    const statusRegion = $('statusRegion');
+    const lockHint = $('lockHint');
+    const dayButtons = document.querySelectorAll('.day-btn');
+    const checkinButtons = document.querySelectorAll('.checkin-btn');
+    const scriptBtn = $('scriptBtn');
+    const scriptSheet = $('scriptSheet');
+    const sheetBackdrop = $('sheetBackdrop');
+    const sheetTimer = $('sheetTimer');
+    const scriptInput = $('scriptInput');
+    const scriptReader = $('scriptReader');
+    const scriptClear = $('scriptClear');
+    const sizeDown = $('sizeDown');
+    const sizeUp = $('sizeUp');
+    const infoBtn = $('infoBtn');
+    const infoSheet = $('infoSheet');
+    const infoBody = $('infoBody');
+    const infoTimer = $('infoTimer');
+    const waitTableBody = $('waitTableBody');
+
+    /* ---------- Persistence (Capacitor Preferences, falling back to localStorage) ---------- */
+    async function saveKey(key, value) {
+        const str = String(value);
+        try {
+            if (Plugins.Preferences) await Plugins.Preferences.set({ key, value: str });
+            else localStorage.setItem(key, str);
+        } catch (e) { /* storage unavailable; ignore */ }
+    }
+
+    async function loadKey(key) {
+        try {
+            if (Plugins.Preferences) {
+                const res = await Plugins.Preferences.get({ key });
+                return res.value;
+            }
+            return localStorage.getItem(key);
+        } catch (e) { return null; }
+    }
+
+    async function removeKey(key) {
+        try {
+            if (Plugins.Preferences) await Plugins.Preferences.remove({ key });
+            else localStorage.removeItem(key);
+        } catch (e) { /* ignore */ }
+    }
+
+    /* ---------- Theme ---------- */
+    function setTheme(theme, persist = true) {
+        currentTheme = theme;
+        document.documentElement.setAttribute('data-theme', theme);
+        $('iconMoon').style.display = theme === 'dark' ? 'none' : 'block';
+        $('iconSun').style.display = theme === 'dark' ? 'block' : 'none';
+        themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+        syncStatusBar(theme);
+        if (persist) saveKey('theme', theme);
+    }
+
+    // Keep the Android status bar matching the app theme (requires @capacitor/status-bar)
+    function syncStatusBar(theme) {
+        const SB = Plugins.StatusBar;
+        if (!SB || !isNative) return;
+        try {
+            // Style.Dark = light icons (for dark backgrounds)
+            SB.setStyle({ style: theme === 'dark' ? 'DARK' : 'LIGHT' });
+            if (isAndroid) SB.setBackgroundColor({ color: theme === 'dark' ? '#0D0D0E' : '#F7F7F8' });
+        } catch (e) { /* ignore */ }
+    }
+
+    themeToggle.addEventListener('click', () => setTheme(currentTheme === 'dark' ? 'light' : 'dark'));
+
+    /* ---------- Mute ---------- */
+    function setMuted(muted, persist = true) {
+        isMuted = muted;
+        $('iconUnmuted').style.display = muted ? 'none' : 'block';
+        $('iconMuted').style.display = muted ? 'block' : 'none';
+        muteToggle.setAttribute('aria-pressed', String(muted));
+        muteToggle.setAttribute('aria-label', muted ? 'Unmute alarm sound' : 'Mute alarm sound');
+        if (muted) stopAlarm();
+        if (persist) saveKey('muted', muted);
+    }
+
+    muteToggle.addEventListener('click', () => setMuted(!isMuted));
+
+    /* ---------- Display ---------- */
+    function displayTime(seconds) {
+        const s = Math.max(0, seconds);
+        const mins = Math.floor(s / 60);
+        const secs = s % 60;
+        const text = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        timerDisplay.textContent = text;
+        sheetTimer.textContent = text;   // shown in the script sheet's read mode
+        infoTimer.textContent = text;    // shown in the info sheet while the timer runs
+    }
+
+    function setLocked(locked) {
+        dayButtons.forEach(b => b.disabled = locked);
+        checkinButtons.forEach(b => b.disabled = locked);
+        $('dayGroup').classList.toggle('locked', locked);
+        $('checkinGroup').classList.toggle('locked', locked);
+        lockHint.textContent = locked ? 'Reset to change day or interval' : '';
+    }
+
+    function setStartButton(state) {
+        if (state === 'running') {
+            startBtn.textContent = 'Pause Timer';
+            startBtn.className = 'control-btn pause-btn';
+        } else {
+            startBtn.textContent = state === 'resume' ? 'Resume Timer' : 'Start Timer';
+            startBtn.className = 'control-btn start-btn';
+        }
+    }
+
+    /* ---------- Native helpers ---------- */
+    const isAndroid = isNative && window.Capacitor.getPlatform() === 'android';
+    const CHANNEL_ID = 'ferber-timer';
+    let channelReady = false;
+
+    // Android 8+ requires a notification channel; importance 5 = heads-up with sound
+    async function ensureAndroidChannel() {
+        const LN = Plugins.LocalNotifications;
+        if (!isAndroid || !LN || channelReady) return;
+        try {
+            await LN.createChannel({
+                id: CHANNEL_ID,
+                name: 'Timer alerts',
+                description: 'Alerts when a check-in interval ends',
+                importance: 5,
+                visibility: 1,
+                vibration: true,
+                lights: true
+            });
+            channelReady = true;
+        } catch (e) { console.warn('Channel creation failed', e); }
+    }
+
+    // Android 12+: exact alarms need a special permission or the alert can be delayed by Doze.
+    // Ask at most once, by sending the user to the system setting.
+    async function ensureExactAlarm() {
+        const LN = Plugins.LocalNotifications;
+        if (!isAndroid || !LN || !LN.checkExactNotificationSetting) return;
+        try {
+            const res = await LN.checkExactNotificationSetting();
+            if (res.exact_alarm === 'granted') return;
+            if (await loadKey('exactPrompted') === 'true') return;
+            await saveKey('exactPrompted', true);
+            await LN.changeExactNotificationSetting();
+        } catch (e) { /* older plugin or Android version; ignore */ }
+    }
+
+    async function scheduleEndNotification(atMs) {
+        const LN = Plugins.LocalNotifications;
+        if (!LN) return;
+        try {
+            let perm = await LN.checkPermissions();
+            if (perm.display !== 'granted') perm = await LN.requestPermissions();
+            if (perm.display !== 'granted') return;
+            await ensureAndroidChannel();
+            await ensureExactAlarm();
+            await LN.cancel({ notifications: [{ id: NOTIFICATION_ID }] });
+            await LN.schedule({
+                notifications: [{
+                    id: NOTIFICATION_ID,
+                    title: 'Check-in time',
+                    body: 'Your timer is done.',
+                    channelId: CHANNEL_ID,
+                    schedule: { at: new Date(atMs), allowWhileIdle: true }
+                }]
+            });
+        } catch (e) { console.warn('Notification schedule failed', e); }
+    }
+
+    async function cancelEndNotification() {
+        const LN = Plugins.LocalNotifications;
+        if (!LN) return;
+        try { await LN.cancel({ notifications: [{ id: NOTIFICATION_ID }] }); } catch (e) { /* ignore */ }
+    }
+
+    async function keepAwake(on) {
+        const KA = Plugins.KeepAwake;
+        if (!KA) return;
+        try { on ? await KA.keepAwake() : await KA.allowSleep(); } catch (e) { /* ignore */ }
+    }
+
+    async function buzz() {
+        const H = Plugins.Haptics;
+        try {
+            if (H) await H.vibrate({ duration: 600 });
+            else if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+        } catch (e) { /* ignore */ }
+    }
+
+    /* ---------- Timer logic (timestamp based, immune to drift and throttling) ---------- */
+    function applySetting() {
+        const minutes = ferberMatrix[selectedDay][selectedCheckIn];
+        totalSeconds = minutes * 60;
+        remainingMs = totalSeconds * 1000;
+        endTime = null;
+        isFinished = false;
+        timerCircle.classList.remove('finished');
+        setStartButton('start');
+        displayTime(totalSeconds);
+    }
+
+    function highlight(buttons, attr, value) {
+        buttons.forEach(btn => {
+            const active = Number(btn.dataset[attr]) === value;
+            btn.classList.toggle('active', active);
+            btn.setAttribute('aria-pressed', String(active));
+        });
+    }
+
+    function selectDay(day, persist = true) {
+        if (isRunning) return;
+        selectedDay = day;
+        highlight(dayButtons, 'day', day);
+        applySetting();
+        clearRunState();
+        if (persist) saveKey('day', day);
+    }
+
+    function selectCheckIn(index, persist = true) {
+        if (isRunning) return;
+        selectedCheckIn = index;
+        highlight(checkinButtons, 'checkin', index);
+        applySetting();
+        clearRunState();
+        if (persist) saveKey('checkin', index);
+    }
+
+    dayButtons.forEach(b => b.addEventListener('click', () => selectDay(Number(b.dataset.day))));
+    checkinButtons.forEach(b => b.addEventListener('click', () => selectCheckIn(Number(b.dataset.checkin))));
+
+    function tick() {
+        if (!isRunning || endTime === null) return;
+        const msLeft = endTime - Date.now();
+        if (msLeft <= 0) {
+            // If we were backgrounded and the notification already alerted the parent,
+            // don't blast the alarm late; just show the finished state.
+            finish(-msLeft > 2000);
+            return;
+        }
+        displayTime(Math.ceil(msLeft / 1000));
+    }
+
+    function startTimer() {
+        // Auto-reset if the previous run finished
+        if (isFinished) applySetting();
+
+        // Unlock audio on the user gesture
+        if (!audioCtx) {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (AC) audioCtx = new AC();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+
+        stopAlarm();
+        endTime = Date.now() + remainingMs;
+        isRunning = true;
+        setStartButton('running');
+        setLocked(true);
+
+        saveKey('endTime', endTime);
+        scheduleEndNotification(endTime);
+        keepAwake(true);
+
+        clearInterval(tickInterval);
+        tickInterval = setInterval(tick, 250);
+        tick();
+    }
+
+    function pauseTimer() {
+        if (isRunning && endTime !== null) {
+            remainingMs = Math.max(0, endTime - Date.now());
+        }
+        isRunning = false;
+        endTime = null;
+        clearInterval(tickInterval);
+        cancelEndNotification();
+        keepAwake(false);
+        clearRunState();
+        setLocked(false);
+        displayTime(Math.ceil(remainingMs / 1000));
+        setStartButton(remainingMs < totalSeconds * 1000 && remainingMs > 0 ? 'resume' : 'start');
+    }
+
+    function resetTimer() {
+        isRunning = false;
+        clearInterval(tickInterval);
+        stopAlarm();
+        cancelEndNotification();
+        keepAwake(false);
+        clearRunState();
+        setLocked(false);
+        applySetting();
+    }
+
+    function finish(playSound = true) {
+        isRunning = false;
+        isFinished = true;
+        endTime = null;
+        remainingMs = 0;
+        clearInterval(tickInterval);
+        clearRunState();
+        keepAwake(false);
+        setLocked(false);
+        displayTime(0);
+        timerCircle.classList.add('finished');
+        setStartButton('start');
+        statusRegion.textContent = 'Timer finished. Time for check-in.';
+
+        // Close any open sheet so the finished state and the Reset / Mute controls are reachable
+        if (activeSheet) closeSheet();
+
+        if (playSound) {
+            buzz();
+            if (!isMuted) playAlarm();
+        }
+    }
+
+    function clearRunState() { removeKey('endTime'); }
+
+    startBtn.addEventListener('click', () => (isRunning ? pauseTimer() : startTimer()));
+    $('resetBtn').addEventListener('click', resetTimer);
+
+    /* ---------- Script sheet: edit when idle, read while the timer runs ---------- */
+    const SIZE_MIN = 16, SIZE_MAX = 40, SIZE_STEP = 2;
+    let saveTimer = null;
+    let clearArmTimer = null;
+    let clearArmed = false;
+    let renderedText = null;
+
+    function applyScriptSize() {
+        document.documentElement.style.setProperty('--script-size', scriptSize + 'px');
+        sizeDown.disabled = scriptSize <= SIZE_MIN;
+        sizeUp.disabled = scriptSize >= SIZE_MAX;
+    }
+
+    function changeScriptSize(delta) {
+        scriptSize = Math.min(SIZE_MAX, Math.max(SIZE_MIN, scriptSize + delta));
+        applyScriptSize();
+        saveKey('scriptSize', scriptSize);
+    }
+
+    function updateScriptIndicator() {
+        const has = scriptText.trim().length > 0;
+        scriptBtn.classList.toggle('has-script', has);
+        scriptBtn.setAttribute('aria-label', has ? 'Open script (saved)' : 'Add a script');
+    }
+
+    function persistScript() {
+        clearTimeout(saveTimer);
+        saveTimer = null;
+        if (scriptText.trim()) saveKey('script', scriptText); else removeKey('script');
+        updateScriptIndicator();
+    }
+
+    function disarmClear() {
+        clearArmed = false;
+        clearTimeout(clearArmTimer);
+        scriptClear.textContent = 'Clear';
+    }
+
+    function openScript() {
+        if (activeSheet) return;
+        const reading = isRunning;
+        scriptSheet.classList.toggle('read', reading);
+
+        if (reading) {
+            const has = scriptText.trim().length > 0;
+            const text = has ? scriptText : 'No script saved yet. Pause the timer to add one.';
+            // Only re-render when the text changed, so reopening keeps the reading position
+            if (renderedText !== text) {
+                scriptReader.textContent = text;
+                scriptReader.scrollTop = 0;
+                renderedText = text;
+            }
+            scriptReader.classList.toggle('empty', !has);
+        } else {
+            scriptInput.value = scriptText;
+        }
+
+        showSheet(scriptSheet, scriptBtn);
+
+        // Only raise the keyboard when there is nothing written yet
+        if (!reading && !scriptText) scriptInput.focus(); else scriptSheet.focus();
+    }
+
+    /* One open/close path for both sheets, so Escape, the backdrop, the Android
+       back button and the timer finishing all behave the same way. */
+    function showSheet(sheet, opener) {
+        activeSheet = sheet;
+        activeOpener = opener;
+        sheet.classList.add('open');
+        sheetBackdrop.classList.add('open');
+    }
+
+    function closeSheet() {
+        if (!activeSheet) return;
+        const sheet = activeSheet, opener = activeOpener;
+
+        if (sheet === scriptSheet) {
+            if (!sheet.classList.contains('read')) {
+                scriptText = scriptInput.value;
+                persistScript();
+            }
+            disarmClear();
+        }
+
+        activeSheet = null;
+        activeOpener = null;
+        sheet.classList.remove('open');
+        sheetBackdrop.classList.remove('open');
+        if (opener) opener.focus();
+    }
+
+    /* ---------- Info sheet ---------- */
+    // Built from ferberMatrix so the table can never drift out of sync with the timer
+    function renderWaitTable() {
+        waitTableBody.textContent = '';
+        for (let day = 1; day <= 7; day++) {
+            const tr = document.createElement('tr');
+            if (day === selectedDay) {
+                tr.className = 'current';
+                tr.setAttribute('aria-current', 'true');
+            }
+            [day, 1, 2, 3, 4].forEach((v, i) => {
+                const cell = document.createElement(i === 0 ? 'th' : 'td');
+                if (i === 0) cell.scope = 'row';
+                cell.textContent = i === 0 ? day : ferberMatrix[day][v];
+                tr.appendChild(cell);
+            });
+            waitTableBody.appendChild(tr);
+        }
+    }
+
+    function openInfo() {
+        if (activeSheet) return;
+        renderWaitTable();
+        infoSheet.classList.toggle('show-timer', isRunning);
+        infoBody.scrollTop = 0;
+        showSheet(infoSheet, infoBtn);
+        infoSheet.focus();
+    }
+
+    infoBtn.addEventListener('click', openInfo);
+    $('infoClose').addEventListener('click', closeSheet);
+    $('infoDone').addEventListener('click', closeSheet);
+
+    scriptBtn.addEventListener('click', openScript);
+    $('sheetClose').addEventListener('click', closeSheet);
+    $('scriptSave').addEventListener('click', closeSheet);
+    sheetBackdrop.addEventListener('click', closeSheet);
+    sizeDown.addEventListener('click', () => changeScriptSize(-SIZE_STEP));
+    sizeUp.addEventListener('click', () => changeScriptSize(SIZE_STEP));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+
+    // Autosave the draft so closing by accident never loses text
+    scriptInput.addEventListener('input', () => {
+        scriptText = scriptInput.value;
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(persistScript, 400);
+    });
+
+    // Clear needs a second tap within 3 seconds so a stray tap can't wipe the script
+    scriptClear.addEventListener('click', () => {
+        if (!scriptInput.value) return;
+        if (!clearArmed) {
+            clearArmed = true;
+            scriptClear.textContent = 'Tap again to clear';
+            clearArmTimer = setTimeout(disarmClear, 3000);
+            return;
+        }
+        disarmClear();
+        scriptInput.value = '';
+        scriptText = '';
+        persistScript();
+        scriptInput.focus();
+    });
+
+    /* ---------- Alarm: ~10 seconds of beeps, stops on Reset/Start/Mute ---------- */
+    function playAlarm() {
+        if (!audioCtx) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+
+        stopAlarm();
+        const now = audioCtx.currentTime;
+        const BEEPS = 10;
+        for (let i = 0; i < BEEPS; i++) {
+            const start = now + i * 1.0;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, start);
+            // short ramps avoid audible clicks
+            gain.gain.setValueAtTime(0, start);
+            gain.gain.linearRampToValueAtTime(0.35, start + 0.03);
+            gain.gain.setValueAtTime(0.35, start + 0.55);
+            gain.gain.linearRampToValueAtTime(0, start + 0.6);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(start);
+            osc.stop(start + 0.65);
+            alarmNodes.push(osc);
+        }
+    }
+
+    function stopAlarm() {
+        alarmNodes.forEach(osc => { try { osc.stop(); } catch (e) { /* already stopped */ } });
+        alarmNodes = [];
+    }
+
+    /* ---------- Resync when the app returns to the foreground ---------- */
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
+    if (Plugins.App && Plugins.App.addListener) {
+        Plugins.App.addListener('appStateChange', ({ isActive }) => {
+            if (isActive) {
+                // Android can suspend the AudioContext while backgrounded
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+                tick();
+            }
+        });
+
+        // Android hardware/gesture back: minimize instead of closing, so a running timer isn't killed
+        Plugins.App.addListener('backButton', () => {
+            if (activeSheet) { closeSheet(); return; }   // back closes an open sheet first
+            if (Plugins.App.minimizeApp) Plugins.App.minimizeApp();
+            else Plugins.App.exitApp();
+        });
+    }
+
+    /* ---------- Init: restore saved settings and any in-progress run ---------- */
+    async function init() {
+        const [theme, muted, day, checkin, savedEnd, savedScript, savedSize] = await Promise.all([
+            loadKey('theme'), loadKey('muted'), loadKey('day'), loadKey('checkin'), loadKey('endTime'),
+            loadKey('script'), loadKey('scriptSize')
+        ]);
+
+        scriptText = savedScript || '';
+        const sz = Number(savedSize);
+        if (sz >= SIZE_MIN && sz <= SIZE_MAX) scriptSize = sz;
+        applyScriptSize();
+        updateScriptIndicator();
+
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setTheme(theme || (prefersDark ? 'dark' : 'light'), false);
+        setMuted(muted === 'true', false);
+
+        const d = Number(day), c = Number(checkin);
+        if (d >= 1 && d <= 7) { selectedDay = d; highlight(dayButtons, 'day', d); }
+        if (c >= 1 && c <= 4) { selectedCheckIn = c; highlight(checkinButtons, 'checkin', c); }
+        applySetting();
+
+        // Resume a run that was in progress when the app was closed or killed
+        const end = Number(savedEnd);
+        if (end) {
+            if (end > Date.now()) {
+                isRunning = true;
+                endTime = end;
+                setStartButton('running');
+                setLocked(true);
+                keepAwake(true);
+                tickInterval = setInterval(tick, 250);
+                tick();
+            } else {
+                finish(false); // finished while away; the notification already alerted them
+            }
+        }
+    }
+
+    init();
+</script>
+
+</body>
+</html>

@@ -1,6 +1,6 @@
 workflows:
   android-release:
-    name: Build Android Release AAB
+    name: Build Android Release AAB & Test APK
     max_build_duration: 30
     instance_type: mac_mini_m1
     environment:
@@ -23,7 +23,7 @@ workflows:
 
       - name: Build web app (Required for Capacitor)
         script: |
-          npm run build  # Adjust if your frontend uses a different build script (e.g., ionic build)
+          npm run build
 
       - name: Sync Native Project
         script: |
@@ -31,7 +31,6 @@ workflows:
 
       - name: Set up keystore
         script: |
-          # Assuming your base64-encoded keystore is stored in an environment variable 
           echo $CM_KEYSTORE | base64 --decode > android/app/codemagic.keystore
 
       - name: Build Android Release AAB
@@ -44,5 +43,16 @@ workflows:
             -PMY_APP_UPLOAD_KEY_ALIAS="$CM_KEY_ALIAS" \
             -PMY_APP_UPLOAD_KEY_PASSWORD="$CM_KEY_PASSWORD"
 
+      - name: Build Android Release APK (for testing)
+        script: |
+          cd android
+          ./gradlew assembleRelease \
+            -PMY_APP_UPLOAD_STORE_FILE=codemagic.keystore \
+            -PMY_APP_UPLOAD_STORE_PASSWORD="$CM_KEYSTORE_PASSWORD" \
+            -PMY_APP_UPLOAD_KEY_ALIAS="$CM_KEY_ALIAS" \
+            -PMY_APP_UPLOAD_KEY_PASSWORD="$CM_KEY_PASSWORD"
+
     artifacts:
       - android/app/build/outputs/bundle/release/*.aab
+      - android/app/build/outputs/apk/release/*.apk
+      

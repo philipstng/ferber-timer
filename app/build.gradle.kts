@@ -11,8 +11,8 @@ android {
         applicationId = "com.ferbersleeptimer.babytracker"
         minSdk = 24
         targetSdk = 36
-        versionCode = 12
-        versionName = "1.3.8"
+        versionCode = 14
+        versionName = "1.4.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

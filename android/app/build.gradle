@@ -19,8 +19,8 @@ android {
         applicationId "com.ferbersleeptimer.babytracker"
         minSdk rootProject.ext.minSdkVersion
         targetSdk 36
-        versionCode 13          // bumped: every Play Store update needs a higher number
-        versionName "1.4.0"     // bumped for the new Script and Info features; change as you like
+        versionCode 14          // bumped: every Play Store update needs a higher number
+        versionName "1.4.1"     // bumped for the new Script and Info features; change as you like
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 

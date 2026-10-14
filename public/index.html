@@ -98,7 +98,7 @@
         }
         .icon-btn:focus-visible, .day-btn:focus-visible, .checkin-btn:focus-visible,
         .control-btn:focus-visible, .reset-btn:focus-visible, .script-btn:focus-visible, .info-btn:focus-visible,
-        .size-btn:focus-visible, .sheet-btn:focus-visible, .script-textarea:focus-visible {
+        .size-btn:focus-visible, .edit-btn:focus-visible, .sheet-btn:focus-visible, .script-textarea:focus-visible {
             outline: 2px solid var(--text-secondary); outline-offset: 2px;
         }
         .icon-btn svg { width: 22px; height: 22px; fill: currentColor; }
@@ -188,7 +188,7 @@
         }
         .sheet.open { transform: translateY(0); visibility: visible; transition: transform 0.3s ease; }
 
-        .sheet-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .sheet-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
         .sheet-title { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.3px; }
         .sheet-timer {
             display: none; margin-left: 8px; font-size: 0.85rem; font-weight: 600;
@@ -196,6 +196,15 @@
         }
         .sheet.read .sheet-timer, .sheet.show-timer .sheet-timer { display: inline; }
         .sheet-tools { display: flex; align-items: center; gap: 4px; }
+
+        /* Edit is only offered in the read view (timer running); tapping it opens the editor */
+        .edit-btn {
+            display: none; padding: 7px 14px; border: none; border-radius: 99px;
+            background-color: var(--control-bg); color: var(--text-primary);
+            font-size: 0.8rem; font-weight: 600; cursor: pointer;
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+        .sheet.read .edit-btn { display: inline-block; }
 
         .size-group {
             display: flex; background-color: var(--control-bg);
@@ -314,7 +323,7 @@
         .reset-btn[hidden] { display: none; }
 
         .control-btn:active, .reset-btn:active, .icon-btn:active,
-        .script-btn:active, .info-btn:active, .size-btn:active, .sheet-btn:active { opacity: 0.8; transform: scale(0.98); }
+        .script-btn:active, .info-btn:active, .size-btn:active, .edit-btn:active, .sheet-btn:active { opacity: 0.8; transform: scale(0.98); }
 
         .sr-only {
             position: absolute; width: 1px; height: 1px; overflow: hidden;
@@ -413,6 +422,7 @@
             <span class="sheet-timer" id="sheetTimer" aria-hidden="true">03:00</span>
         </div>
         <div class="sheet-tools">
+            <button type="button" class="edit-btn" id="scriptEdit">Edit</button>
             <div class="size-group" role="group" aria-label="Text size">
                 <button type="button" class="size-btn" id="sizeDown" aria-label="Decrease text size">A&minus;</button>
                 <button type="button" class="size-btn" id="sizeUp" aria-label="Increase text size">A+</button>
@@ -471,7 +481,7 @@
             <li><strong>Check-In Interval</strong> is which wait you are on: 1st, 2nd, 3rd, then "Subseq." for every wait after the third.</li>
             <li>Tap <strong>Start</strong> when you leave the room. When time is up, the app sounds an alarm and sends a notification.</li>
             <li>After a check-in, choose the next interval and tap Start again.</li>
-            <li><strong>Script</strong> is optional. Write something calm to say or read to your baby, and open it while the timer runs.</li>
+            <li><strong>Script</strong> is optional. Write something calm to say or read to your baby, and open it while the timer runs. You can tap <strong>Edit</strong> to change it at any time, even while the timer is running.</li>
             <li>Day and interval are locked while the timer runs. Tap <strong>Pause</strong> to change them. <strong>Reset</strong> appears next to Resume (or Start, after the alarm) and sets the timer back to the full interval.</li>
         </ul>
 
@@ -911,29 +921,53 @@
         scriptClear.textContent = 'Clear';
     }
 
+    function renderReader() {
+        const has = scriptText.trim().length > 0;
+        const text = has ? scriptText : 'No script saved yet. Tap Edit to add one.';
+        // Only re-render when the text changed, so reopening keeps the reading position
+        if (renderedText !== text) {
+            scriptReader.textContent = text;
+            scriptReader.scrollTop = 0;
+            renderedText = text;
+        }
+        scriptReader.classList.toggle('empty', !has);
+    }
+
     function openScript() {
         if (activeSheet) return;
         const reading = isRunning;
         scriptSheet.classList.toggle('read', reading);
+        // Keep the countdown visible in the header in both read and edit views while running
+        scriptSheet.classList.toggle('show-timer', isRunning);
 
-        if (reading) {
-            const has = scriptText.trim().length > 0;
-            const text = has ? scriptText : 'No script saved yet. Pause the timer to add one.';
-            // Only re-render when the text changed, so reopening keeps the reading position
-            if (renderedText !== text) {
-                scriptReader.textContent = text;
-                scriptReader.scrollTop = 0;
-                renderedText = text;
-            }
-            scriptReader.classList.toggle('empty', !has);
-        } else {
-            scriptInput.value = scriptText;
-        }
+        if (reading) renderReader(); else scriptInput.value = scriptText;
 
         showSheet(scriptSheet, scriptBtn);
 
         // Only raise the keyboard when there is nothing written yet
         if (!reading && !scriptText) scriptInput.focus(); else scriptSheet.focus();
+    }
+
+    // While the timer runs the sheet opens in the read view; Edit is a deliberate switch to the editor
+    function editWhileRunning() {
+        scriptInput.value = scriptText;
+        scriptSheet.classList.remove('read');
+        scriptInput.focus();
+    }
+
+    // Save: when idle it closes the sheet; while the timer runs it returns to the read view
+    function saveScript() {
+        if (isRunning && activeSheet === scriptSheet) {
+            scriptText = scriptInput.value;
+            persistScript();
+            disarmClear();
+            renderReader();
+            scriptSheet.classList.add('read');
+            scriptInput.blur();
+            scriptSheet.focus();
+        } else {
+            closeSheet();
+        }
     }
 
     /* One open/close path for both sheets, so Escape, the backdrop, the Android
@@ -999,7 +1033,8 @@
 
     scriptBtn.addEventListener('click', openScript);
     $('sheetClose').addEventListener('click', closeSheet);
-    $('scriptSave').addEventListener('click', closeSheet);
+    $('scriptSave').addEventListener('click', saveScript);
+    $('scriptEdit').addEventListener('click', editWhileRunning);
     sheetBackdrop.addEventListener('click', closeSheet);
     sizeDown.addEventListener('click', () => changeScriptSize(-SIZE_STEP));
     sizeUp.addEventListener('click', () => changeScriptSize(SIZE_STEP));

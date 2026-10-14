@@ -23,6 +23,8 @@
             --btn-pause-bg: #71717A;
             --shadow-color: rgba(0, 0, 0, 0.05);
             --finished-bg: #22C55E;
+            --finished-text: #FFFFFF;
+            --btn-pause-text: #FFFFFF;
             --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Charter, Georgia, "Times New Roman", serif;
         }
 
@@ -41,6 +43,25 @@
             --shadow-color: rgba(0, 0, 0, 0.4);
             /* Dimmer green so it isn't harsh in a dark nursery */
             --finished-bg: #166534;
+        }
+
+        /* Night: very dim and warm (no blue light) for a dark nursery */
+        [data-theme="night"] {
+            --bg-color: #0A0605;
+            --card-bg: #120B09;
+            --text-primary: #B97A56;
+            --text-secondary: #8F6249;
+            --control-bg: #1C1210;
+            --active-pill-bg: #2E1C16;
+            --active-pill-text: #D79A72;
+            --border-color: #1E1311;
+            --btn-primary-bg: #6B3D28;
+            --btn-primary-text: #E3B48B;
+            --btn-pause-bg: #2A1912;
+            --btn-pause-text: #C98A66;
+            --shadow-color: rgba(0, 0, 0, 0.6);
+            --finished-bg: #4A2A14;
+            --finished-text: #E0A878;
         }
 
         * {
@@ -287,6 +308,52 @@
         .wait-table tr.current th { border-radius: 10px 0 0 10px; }
         .wait-table tr.current td:last-child { border-radius: 0 10px 10px 0; }
 
+        /* ---------- Editable wait times ---------- */
+        /* The info body uses a serif font for everything; keep form controls in the UI font */
+        .info-body button, .info-body input {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        .wait-input {
+            width: 100%; max-width: 64px; padding: 6px 2px;
+            border: 1px solid var(--border-color); border-radius: 8px;
+            background-color: var(--bg-color); color: var(--text-primary);
+            text-align: center; font-size: 0.9rem; font-variant-numeric: tabular-nums;
+            -moz-appearance: textfield; appearance: textfield;
+        }
+        .wait-input::-webkit-outer-spin-button, .wait-input::-webkit-inner-spin-button {
+            -webkit-appearance: none; margin: 0;
+        }
+        .wait-input[aria-invalid="true"] { border-color: #DC2626; }
+        .wait-input:focus-visible { outline: 2px solid var(--text-secondary); outline-offset: 1px; }
+        .times-actions { display: flex; gap: 8px; margin: 10px 0; }
+        .times-actions[hidden], .info-body .small[hidden] { display: none; }
+        .times-actions .sheet-btn { padding: 10px; font-size: 0.85rem; }
+        .info-body .times-error { color: #DC2626; }
+        .sheet-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* ---------- Night log ---------- */
+        .log-body {
+            flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch; padding: 2px 2px 12px; outline: none;
+        }
+        .log-empty { padding: 8px 2px; font-size: 0.95rem; line-height: 1.5; color: var(--text-secondary); }
+        .log-session { margin-bottom: 22px; }
+        .log-session-head {
+            display: flex; flex-wrap: wrap; justify-content: space-between;
+            align-items: baseline; gap: 2px 8px; padding-bottom: 6px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .log-session-title { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
+        .log-session-sum { font-size: 0.75rem; color: var(--text-secondary); }
+        .log-row {
+            display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; align-items: baseline;
+            padding: 9px 0; border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem; font-variant-numeric: tabular-nums; color: var(--text-primary);
+        }
+        .log-time { grid-column: 1; grid-row: 1; font-weight: 600; }
+        .log-result { grid-column: 2; grid-row: 1; text-align: right; }
+        .log-detail { grid-column: 1 / -1; grid-row: 2; font-size: 0.78rem; color: var(--text-secondary); }
+
         .middle-section {
             flex: 1; display: flex; flex-direction: column;
             justify-content: center; align-items: center; margin-bottom: 16px;
@@ -306,7 +373,7 @@
             font-variant-numeric: tabular-nums; letter-spacing: -1px;
         }
         
-        .timer-circle.finished .timer-display { color: #FFFFFF; }
+        .timer-circle.finished .timer-display { color: var(--finished-text); }
 
         /* One row: the main action takes 2/3, Reset (when shown) takes 1/3 */
         .controls { display: flex; flex-direction: row; gap: 12px; width: 100%; }
@@ -316,7 +383,7 @@
             font-size: 1rem; font-weight: 600; cursor: pointer;
         }
         .start-btn { background-color: var(--btn-primary-bg); color: var(--btn-primary-text); }
-        .pause-btn { background-color: var(--btn-pause-bg); color: #FFFFFF; }
+        .pause-btn { background-color: var(--btn-pause-bg); color: var(--btn-pause-text); }
 
         /* Secondary, narrower, so a groggy tap is less likely to hit it */
         .reset-btn { flex: 1; background-color: var(--control-bg); color: var(--text-primary); }
@@ -340,17 +407,29 @@
         <div class="header-row">
             <div class="title">Ferber Method</div>
             <div class="header-actions">
+                <button type="button" class="icon-btn" id="logBtn" aria-haspopup="dialog" aria-label="Open night log">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+                    </svg>
+                </button>
                 <button type="button" class="icon-btn" id="themeToggle" aria-label="Switch to dark mode">
                     <svg id="iconMoon" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M12.3 2a10 10 0 0 0 9.7 11.6 10 10 0 1 1-11.6-9.7z"/>
+                    </svg>
+                    <svg id="iconNight" viewBox="0 0 24 24" style="display: none;" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <path d="M12 3a9 9 0 0 0 0 18z"/>
                     </svg>
                     <svg id="iconSun" viewBox="0 0 24 24" style="display: none;" aria-hidden="true">
                         <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zm-9-8c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1v2c0 .55.45 1 1 1zm0 16c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1zM5.64 7.05c.39-.39.39-1.02 0-1.41L4.22 4.22c-.39-.39-1.02-.39-1.41 0s-.39 1.02 0 1.41l1.42 1.42c.39.39 1.02.39 1.41 0zm12.72 12.72c.39-.39.39-1.02 0-1.41l-1.42-1.42c-.39-.39-1.02-.39-1.41 0s-.39 1.02 0 1.41l1.42 1.42c.39.39 1.02.39 1.41 0zM7.05 18.36l-1.42 1.42c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.42-1.42c.39-.39.39-1.02 0-1.41-.39-.38-1.03-.38-1.41 0zm12.72-12.72l-1.42 1.42c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.42-1.42c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0z"/>
                     </svg>
                 </button>
-                <button type="button" class="icon-btn" id="muteToggle" aria-label="Mute alarm sound" aria-pressed="false">
+                <button type="button" class="icon-btn" id="muteToggle" aria-label="Alarm: sound and vibration. Tap for vibration only">
                     <svg id="iconUnmuted" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                    </svg>
+                    <svg id="iconVibrate" viewBox="0 0 24 24" style="display: none;" aria-hidden="true">
+                        <path d="M0 15h2V9H0v6zm3 2h2V7H3v10zm19-8v6h2V9h-2zm-3 8h2V7h-2v10zM16.5 3h-9C6.67 3 6 3.67 6 4.5v15c0 .83.67 1.5 1.5 1.5h9c.83 0 1.5-.67 1.5-1.5v-15c0-.83-.67-1.5-1.5-1.5zM16 19H8V5h8v14z"/>
                     </svg>
                     <svg id="iconMuted" viewBox="0 0 24 24" style="display: none;" aria-hidden="true">
                         <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
@@ -478,11 +557,14 @@
         <h3>Using this timer</h3>
         <ul>
             <li><strong>Day</strong> is which day of the plan you are on (1&ndash;7). Later days use longer waits.</li>
-            <li><strong>Check-In Interval</strong> is which wait you are on: 1st, 2nd, 3rd, then "Subseq." for every wait after the third.</li>
+            <li><strong>Check-In Interval</strong> is which wait you are on: 1st, 2nd, 3rd, then "Subseq." for every wait after the third. When a timer ends, the next interval is selected for you.</li>
             <li>Tap <strong>Start</strong> when you leave the room. When time is up, the app sounds an alarm and sends a notification.</li>
-            <li>After a check-in, choose the next interval and tap Start again.</li>
+            <li>After a check-in, just tap Start again. To use a different interval, tap it first.</li>
             <li><strong>Script</strong> is optional. Write something calm to say or read to your baby, and open it while the timer runs. You can tap <strong>Edit</strong> to change it at any time, even while the timer is running.</li>
             <li>Day and interval are locked while the timer runs. Tap <strong>Pause</strong> to change them. <strong>Reset</strong> appears next to Resume (or Start, after the alarm) and sets the timer back to the full interval.</li>
+            <li>The <strong>speaker icon</strong> cycles the alarm between sound with vibration, vibration only, and silent. The notification follows the same setting. Do Not Disturb can still silence it, because it is a notification and not a clock alarm.</li>
+            <li>The <strong>half-circle / moon / sun icon</strong> cycles the look between light, dark, and a very dim warm night view.</li>
+            <li>The <strong>clock icon</strong> opens the night log, which records each timer automatically so you can see how a night went.</li>
         </ul>
 
         <h3>Example wait times</h3>
@@ -493,7 +575,17 @@
             </thead>
             <tbody id="waitTableBody"></tbody>
         </table>
-        <p class="small">These are example times based on commonly published versions of the method. They are not a personalized recommendation, and your pediatrician may suggest different times.</p>
+        <p class="small">These are example times based on commonly published versions of the method. They are not a personalized recommendation, and your pediatrician may suggest different times. You can change them below to match your pediatrician's plan.</p>
+        <p class="small" id="timesStatus" hidden></p>
+        <p class="small times-error" id="timesError" role="alert" hidden></p>
+        <div class="times-actions" id="timesViewActions">
+            <button type="button" class="sheet-btn secondary" id="timesEdit">Edit times</button>
+        </div>
+        <div class="times-actions" id="timesEditActions" hidden>
+            <button type="button" class="sheet-btn secondary" id="timesDefaults">Restore defaults</button>
+            <button type="button" class="sheet-btn secondary" id="timesCancel">Cancel</button>
+            <button type="button" class="sheet-btn primary" id="timesSave">Save</button>
+        </div>
 
         <h3>Important information</h3>
         <ul>
@@ -514,6 +606,28 @@
     </div>
 </div>
 
+<!-- LOG SHEET: built from the saved log each time it opens -->
+<div class="sheet" id="logSheet" role="dialog" aria-modal="true" aria-labelledby="logTitle" tabindex="-1">
+    <div class="sheet-header">
+        <div>
+            <span class="sheet-title" id="logTitle">Night log</span>
+            <span class="sheet-timer" id="logTimer" aria-hidden="true">03:00</span>
+        </div>
+        <button type="button" class="icon-btn" id="logClose" aria-label="Close night log">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+        </button>
+    </div>
+
+    <div class="log-body" id="logBody" tabindex="0"></div>
+
+    <div class="sheet-footer">
+        <button type="button" class="sheet-btn secondary" id="logClear">Clear log</button>
+        <button type="button" class="sheet-btn primary" id="logDone">Done</button>
+    </div>
+</div>
+
 <script>
     const ferberMatrix = {
         1: { 1: 3,  2: 5,  3: 10, 4: 10 },
@@ -524,6 +638,21 @@
         6: { 1: 17, 2: 20, 3: 25, 4: 25 },
         7: { 1: 20, 2: 25, 3: 30, 4: 30 }
     };
+
+    const MAX_WAIT = 180;          // longest wait (minutes) allowed when editing times
+    const INTERVAL_NAMES = ['1st', '2nd', '3rd', 'Subseq.'];
+
+    function cloneTimes(src) {
+        const out = {};
+        for (let d = 1; d <= 7; d++) {
+            out[d] = {};
+            for (let i = 1; i <= 4; i++) out[d][i] = src[d][i];
+        }
+        return out;
+    }
+
+    // ferberMatrix holds the built-in example times; waitTimes is what the timer actually uses
+    let waitTimes = cloneTimes(ferberMatrix);
 
     const NOTIFICATION_ID = 1;
 
@@ -540,10 +669,13 @@
     let tickInterval = null;
     let isRunning = false;
     let isFinished = false;
-    let isMuted = false;
+    let alarmMode = 'sound';       // 'sound' (sound + vibration) | 'vibrate' | 'silent'
     let currentTheme = 'light';
     let audioCtx = null;
     let alarmNodes = [];
+    let alarmTimers = [];          // vibration pulses scheduled alongside the alarm
+    let nightLog = [];             // see "Night log" below
+    let editingTimes = false;      // the wait-times table is in edit mode
     let scriptText = '';
     let scriptSize = 22;           // px, used for both the editor and the read view
     let activeSheet = null;        // the sheet currently open (script or info), or null
@@ -575,6 +707,16 @@
     const infoBody = $('infoBody');
     const infoTimer = $('infoTimer');
     const waitTableBody = $('waitTableBody');
+    const timesEdit = $('timesEdit');
+    const timesViewActions = $('timesViewActions');
+    const timesEditActions = $('timesEditActions');
+    const timesStatus = $('timesStatus');
+    const timesError = $('timesError');
+    const logBtn = $('logBtn');
+    const logSheet = $('logSheet');
+    const logBody = $('logBody');
+    const logTimer = $('logTimer');
+    const logClear = $('logClear');
 
     /* ---------- Persistence (Capacitor Preferences, falling back to localStorage) ---------- */
     async function saveKey(key, value) {
@@ -603,12 +745,22 @@
     }
 
     /* ---------- Theme ---------- */
+    const THEMES = ['light', 'dark', 'night'];
+    const THEME_NEXT_LABEL = {
+        light: 'Switch to dark mode',
+        dark: 'Switch to night mode (very dim, warm)',
+        night: 'Switch to light mode'
+    };
+
     function setTheme(theme, persist = true) {
+        if (!THEMES.includes(theme)) theme = 'light';
         currentTheme = theme;
         document.documentElement.setAttribute('data-theme', theme);
-        $('iconMoon').style.display = theme === 'dark' ? 'none' : 'block';
-        $('iconSun').style.display = theme === 'dark' ? 'block' : 'none';
-        themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+        // The icon shows the theme a tap will switch to
+        $('iconMoon').style.display = theme === 'light' ? 'block' : 'none';
+        $('iconNight').style.display = theme === 'dark' ? 'block' : 'none';
+        $('iconSun').style.display = theme === 'night' ? 'block' : 'none';
+        themeToggle.setAttribute('aria-label', THEME_NEXT_LABEL[theme]);
         syncStatusBar(theme);
         if (persist) saveKey('theme', theme);
     }
@@ -619,25 +771,43 @@
         if (!SB || !isNative) return;
         try {
             // Style.Dark = light icons (for dark backgrounds)
-            SB.setStyle({ style: theme === 'dark' ? 'DARK' : 'LIGHT' });
-            if (isAndroid) SB.setBackgroundColor({ color: theme === 'dark' ? '#0D0D0E' : '#F7F7F8' });
+            SB.setStyle({ style: theme === 'light' ? 'LIGHT' : 'DARK' });
+            if (isAndroid) {
+                const bg = theme === 'night' ? '#0A0605' : (theme === 'dark' ? '#0D0D0E' : '#F7F7F8');
+                SB.setBackgroundColor({ color: bg });
+            }
         } catch (e) { /* ignore */ }
     }
 
-    themeToggle.addEventListener('click', () => setTheme(currentTheme === 'dark' ? 'light' : 'dark'));
+    themeToggle.addEventListener('click', () =>
+        setTheme(THEMES[(THEMES.indexOf(currentTheme) + 1) % THEMES.length]));
 
-    /* ---------- Mute ---------- */
-    function setMuted(muted, persist = true) {
-        isMuted = muted;
-        $('iconUnmuted').style.display = muted ? 'none' : 'block';
-        $('iconMuted').style.display = muted ? 'block' : 'none';
-        muteToggle.setAttribute('aria-pressed', String(muted));
-        muteToggle.setAttribute('aria-label', muted ? 'Unmute alarm sound' : 'Mute alarm sound');
-        if (muted) stopAlarm();
-        if (persist) saveKey('muted', muted);
+    /* ---------- Alarm mode: sound + vibration, vibration only, or silent ---------- */
+    const ALARM_MODES = ['sound', 'vibrate', 'silent'];
+    const ALARM_LABELS = {
+        sound: 'Alarm: sound and vibration. Tap for vibration only',
+        vibrate: 'Alarm: vibration only. Tap for silent',
+        silent: 'Alarm: silent. Tap for sound and vibration'
+    };
+
+    function setAlarmMode(mode, persist = true) {
+        if (!ALARM_MODES.includes(mode)) mode = 'sound';
+        alarmMode = mode;
+        $('iconUnmuted').style.display = mode === 'sound' ? 'block' : 'none';
+        $('iconVibrate').style.display = mode === 'vibrate' ? 'block' : 'none';
+        $('iconMuted').style.display = mode === 'silent' ? 'block' : 'none';
+        muteToggle.setAttribute('aria-label', ALARM_LABELS[mode]);
+        stopAlarm();   // changing the mode also silences an alarm that is ringing right now
+        if (persist) {
+            saveKey('alarmMode', mode);
+            statusRegion.textContent = ALARM_LABELS[mode].split('.')[0];
+            // The notification's channel depends on the mode, so reschedule a running timer's
+            if (isRunning && endTime !== null) scheduleEndNotification(endTime);
+        }
     }
 
-    muteToggle.addEventListener('click', () => setMuted(!isMuted));
+    muteToggle.addEventListener('click', () =>
+        setAlarmMode(ALARM_MODES[(ALARM_MODES.indexOf(alarmMode) + 1) % ALARM_MODES.length]));
 
     /* ---------- Display ---------- */
     function displayTime(seconds) {
@@ -648,6 +818,7 @@
         timerDisplay.textContent = text;
         sheetTimer.textContent = text;   // shown in the script sheet's read mode
         infoTimer.textContent = text;    // shown in the info sheet while the timer runs
+        logTimer.textContent = text;     // shown in the night log while the timer runs
     }
 
     function setLocked(locked) {
@@ -673,25 +844,47 @@
 
     /* ---------- Native helpers ---------- */
     const isAndroid = isNative && window.Capacitor.getPlatform() === 'android';
-    const CHANNEL_ID = 'ferber-timer';
-    let channelReady = false;
+    // Android 8+ requires a notification channel, and a channel keeps the settings it was first
+    // created with. So there is one channel per alarm mode, under new IDs, which also makes the
+    // notification follow the speaker button. A channel only plays a sound if a file with that
+    // name exists in android/app/src/main/res/raw/ (see ferber_chime.wav); without it the
+    // sound channel is simply silent.
+    const CHANNELS = {
+        sound:   { id: 'ferber-alert-sound',   name: 'Timer alert (sound)',     importance: 5, vibration: true,  sound: 'ferber_chime.wav' },
+        vibrate: { id: 'ferber-alert-vibrate', name: 'Timer alert (vibration)', importance: 4, vibration: true },
+        silent:  { id: 'ferber-alert-silent',  name: 'Timer alert (silent)',    importance: 3, vibration: false }
+    };
+    const OLD_CHANNEL_IDS = ['ferber-timer', 'ferber-timer-v2'];
+    const readyChannels = {};
+    let oldChannelsRemoved = false;
 
-    // Android 8+ requires a notification channel; importance 5 = heads-up with sound
-    async function ensureAndroidChannel() {
+    // Returns true when the channel for this mode exists (or no channel is needed)
+    async function ensureAndroidChannel(mode) {
         const LN = Plugins.LocalNotifications;
-        if (!isAndroid || !LN || channelReady) return;
+        if (!isAndroid || !LN) return true;
+        const def = CHANNELS[mode] || CHANNELS.sound;
+        if (readyChannels[def.id]) return true;
         try {
-            await LN.createChannel({
-                id: CHANNEL_ID,
-                name: 'Timer alerts',
+            if (!oldChannelsRemoved) {
+                oldChannelsRemoved = true;
+                for (const id of OLD_CHANNEL_IDS) {
+                    try { await LN.deleteChannel({ id }); } catch (e) { /* not there */ }
+                }
+            }
+            const channel = {
+                id: def.id,
+                name: def.name,
                 description: 'Alerts when a check-in interval ends',
-                importance: 5,
+                importance: def.importance,
                 visibility: 1,
-                vibration: true,
-                lights: true
-            });
-            channelReady = true;
-        } catch (e) { console.warn('Channel creation failed', e); }
+                vibration: def.vibration,
+                lights: mode !== 'silent'
+            };
+            if (def.sound) channel.sound = def.sound;
+            await LN.createChannel(channel);
+            readyChannels[def.id] = true;
+            return true;
+        } catch (e) { console.warn('Channel creation failed', e); return false; }
     }
 
     // Android 12+: exact alarms need a special permission or the alert can be delayed by Doze.
@@ -715,18 +908,20 @@
             let perm = await LN.checkPermissions();
             if (perm.display !== 'granted') perm = await LN.requestPermissions();
             if (perm.display !== 'granted') return;
-            await ensureAndroidChannel();
+            const mode = alarmMode;
+            const channelOk = await ensureAndroidChannel(mode);
             await ensureExactAlarm();
             await LN.cancel({ notifications: [{ id: NOTIFICATION_ID }] });
-            await LN.schedule({
-                notifications: [{
-                    id: NOTIFICATION_ID,
-                    title: 'Check-in time',
-                    body: 'Your timer is done.',
-                    channelId: CHANNEL_ID,
-                    schedule: { at: new Date(atMs), allowWhileIdle: true }
-                }]
-            });
+            const notification = {
+                id: NOTIFICATION_ID,
+                title: 'Check-in time',
+                body: 'Your timer is done.',
+                schedule: { at: new Date(atMs), allowWhileIdle: true }
+            };
+            // A missing channel would stop the notification from firing at all, so only name
+            // one that exists (otherwise the plugin's default channel is used)
+            if (isAndroid && channelOk) notification.channelId = CHANNELS[mode].id;
+            await LN.schedule({ notifications: [notification] });
         } catch (e) { console.warn('Notification schedule failed', e); }
     }
 
@@ -752,7 +947,7 @@
 
     /* ---------- Timer logic (timestamp based, immune to drift and throttling) ---------- */
     function applySetting() {
-        const minutes = ferberMatrix[selectedDay][selectedCheckIn];
+        const minutes = waitTimes[selectedDay][selectedCheckIn];
         totalSeconds = minutes * 60;
         remainingMs = totalSeconds * 1000;
         endTime = null;
@@ -774,6 +969,7 @@
         if (isRunning) return;
         selectedDay = day;
         highlight(dayButtons, 'day', day);
+        closeOpenEntry('stopped');
         applySetting();
         clearRunState();
         if (persist) saveKey('day', day);
@@ -783,6 +979,7 @@
         if (isRunning) return;
         selectedCheckIn = index;
         highlight(checkinButtons, 'checkin', index);
+        closeOpenEntry('stopped');
         applySetting();
         clearRunState();
         if (persist) saveKey('checkin', index);
@@ -795,9 +992,10 @@
         if (!isRunning || endTime === null) return;
         const msLeft = endTime - Date.now();
         if (msLeft <= 0) {
-            // If we were backgrounded and the notification already alerted the parent,
-            // don't blast the alarm late; just show the finished state.
-            finish(-msLeft > 2000);
+            // If the timer ended a while ago (the app was in the background), don't blast the
+            // full alarm. Play a short soft reminder and a buzz instead, in case the
+            // notification was silenced by Do Not Disturb or battery saver.
+            finish(msLeft < -2000 ? 'soft' : 'full', endTime);
             return;
         }
         displayTime(Math.ceil(msLeft / 1000));
@@ -807,14 +1005,15 @@
         // Auto-reset if the previous run finished
         if (isFinished) applySetting();
 
-        // Unlock audio on the user gesture
-        if (!audioCtx) {
-            const AC = window.AudioContext || window.webkitAudioContext;
-            if (AC) audioCtx = new AC();
-        }
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+        unlockAudio();   // audio may only start after a touch, so do it on this tap
 
         stopAlarm();
+
+        // A fresh start gets a new log entry; a resume continues the open one
+        const open = openEntry();
+        if (open && remainingMs < totalSeconds * 1000) { delete open.p; persistLog(); }
+        else logStart();
+
         endTime = Date.now() + remainingMs;
         isRunning = true;
         setStartButton('running');
@@ -833,6 +1032,8 @@
         if (isRunning && endTime !== null) {
             remainingMs = Math.max(0, endTime - Date.now());
         }
+        const open = openEntry();
+        if (open) { open.p = Date.now(); persistLog(); }
         isRunning = false;
         endTime = null;
         clearInterval(tickInterval);
@@ -845,6 +1046,7 @@
     }
 
     function resetTimer() {
+        closeOpenEntry('stopped', Date.now());
         isRunning = false;
         clearInterval(tickInterval);
         stopAlarm();
@@ -855,7 +1057,17 @@
         applySetting();
     }
 
-    function finish(playSound = true) {
+    function advanceCheckIn() {
+        if (selectedCheckIn >= 4) return false;
+        selectedCheckIn += 1;
+        highlight(checkinButtons, 'checkin', selectedCheckIn);
+        saveKey('checkin', selectedCheckIn);
+        return true;
+    }
+
+    // alertLevel: 'full' (rising alarm), 'soft' (short reminder) or 'none'.
+    // endedAt is when the interval was due to end, which can be earlier than now.
+    function finish(alertLevel = 'full', endedAt = Date.now()) {
         isRunning = false;
         isFinished = true;
         endTime = null;
@@ -866,16 +1078,16 @@
         setLocked(false);
         displayTime(0);
         timerCircle.classList.add('finished');
+        closeOpenEntry('done', endedAt);
+        const advanced = advanceCheckIn();   // the next interval is ready for the next Start
         setStartButton('start');
-        statusRegion.textContent = 'Timer finished. Time for check-in.';
+        statusRegion.textContent = 'Timer finished. Time for check-in.' +
+            (advanced ? ' The ' + INTERVAL_NAMES[selectedCheckIn - 1] + ' interval is selected next.' : '');
 
-        // Close any open sheet so the finished state and the Reset / Mute controls are reachable
+        // Close any open sheet so the finished state and the Reset / alarm controls are reachable
         if (activeSheet) closeSheet();
 
-        if (playSound) {
-            buzz();
-            if (!isMuted) playAlarm();
-        }
+        if (alertLevel !== 'none') playAlarm(alertLevel === 'soft');
     }
 
     function clearRunState() { removeKey('endTime'); }
@@ -990,6 +1202,8 @@
             }
             disarmClear();
         }
+        if (sheet === infoSheet && editingTimes) { editingTimes = false; timesError.hidden = true; }
+        if (sheet === logSheet) disarmLogClear();
 
         activeSheet = null;
         activeOpener = null;
@@ -999,7 +1213,14 @@
     }
 
     /* ---------- Info sheet ---------- */
-    // Built from ferberMatrix so the table can never drift out of sync with the timer
+    // Built from waitTimes so the table can never drift out of sync with the timer
+    function isCustomTimes() {
+        for (let d = 1; d <= 7; d++) {
+            for (let i = 1; i <= 4; i++) if (waitTimes[d][i] !== ferberMatrix[d][i]) return true;
+        }
+        return false;
+    }
+
     function renderWaitTable() {
         waitTableBody.textContent = '';
         for (let day = 1; day <= 7; day++) {
@@ -1008,18 +1229,45 @@
                 tr.className = 'current';
                 tr.setAttribute('aria-current', 'true');
             }
-            [day, 1, 2, 3, 4].forEach((v, i) => {
-                const cell = document.createElement(i === 0 ? 'th' : 'td');
-                if (i === 0) cell.scope = 'row';
-                cell.textContent = i === 0 ? day : ferberMatrix[day][v];
-                tr.appendChild(cell);
-            });
+            const th = document.createElement('th');
+            th.scope = 'row';
+            th.textContent = day;
+            tr.appendChild(th);
+            for (let i = 1; i <= 4; i++) {
+                const td = document.createElement('td');
+                if (editingTimes) {
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.inputMode = 'numeric';
+                    input.min = '1';
+                    input.max = String(MAX_WAIT);
+                    input.step = '1';
+                    input.className = 'wait-input';
+                    input.value = waitTimes[day][i];
+                    input.dataset.day = day;
+                    input.dataset.i = i;
+                    input.setAttribute('aria-label', 'Day ' + day + ', ' + INTERVAL_NAMES[i - 1] + ' wait, in minutes');
+                    td.appendChild(input);
+                } else {
+                    td.textContent = waitTimes[day][i];
+                }
+                tr.appendChild(td);
+            }
             waitTableBody.appendChild(tr);
         }
+        timesViewActions.hidden = editingTimes;
+        timesEditActions.hidden = !editingTimes;
+        timesEdit.disabled = isRunning;
+        if (!editingTimes) timesError.hidden = true;
+        const status = isRunning ? 'Pause the timer to edit the wait times.'
+                     : (isCustomTimes() ? 'Using your custom times.' : '');
+        timesStatus.textContent = status;
+        timesStatus.hidden = !status;
     }
 
     function openInfo() {
         if (activeSheet) return;
+        editingTimes = false;
         renderWaitTable();
         infoSheet.classList.toggle('show-timer', isRunning);
         infoBody.scrollTop = 0;
@@ -1063,37 +1311,293 @@
         scriptInput.focus();
     });
 
-    /* ---------- Alarm: ~10 seconds of beeps, stops on Reset/Start/Mute ---------- */
-    function playAlarm() {
-        if (!audioCtx) return;
-        if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+    /* ---------- Alarm: gentle chimes that rise over about 30 seconds ---------- */
+    const CHIME_COUNT = 15;      // about 30 seconds in total
+    const CHIME_GAP = 2.0;       // seconds between chimes
 
-        stopAlarm();
-        const now = audioCtx.currentTime;
-        const BEEPS = 10;
-        for (let i = 0; i < BEEPS; i++) {
-            const start = now + i * 1.0;
+    // Audio can only start after a touch. Unlock it on the first touch anywhere, so the
+    // alarm still works after the app was restored from a saved run.
+    function unlockAudio() {
+        if (!audioCtx) {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (AC) audioCtx = new AC();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+    }
+    document.addEventListener('pointerdown', unlockAudio, { passive: true });
+
+    function chime(startAt, peak) {
+        [[660, 0], [880, 0.5]].forEach(([freq, offset]) => {
+            const t = startAt + offset;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(880, start);
-            // short ramps avoid audible clicks
-            gain.gain.setValueAtTime(0, start);
-            gain.gain.linearRampToValueAtTime(0.35, start + 0.03);
-            gain.gain.setValueAtTime(0.35, start + 0.55);
-            gain.gain.linearRampToValueAtTime(0, start + 0.6);
+            osc.frequency.setValueAtTime(freq, t);
+            // soft attack and a long decay avoid clicks and keep it gentle
+            gain.gain.setValueAtTime(0.0001, t);
+            gain.gain.linearRampToValueAtTime(peak, t + 0.06);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.48);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
-            osc.start(start);
-            osc.stop(start + 0.65);
+            osc.start(t);
+            osc.stop(t + 0.5);
             alarmNodes.push(osc);
+        });
+    }
+
+    // soft = a short reminder (3 quiet chimes) for when the timer ended a while ago
+    function playAlarm(soft = false) {
+        stopAlarm();
+        if (alarmMode === 'silent') return;
+
+        const count = soft ? 3 : CHIME_COUNT;
+
+        if (alarmMode === 'sound' && audioCtx) {
+            if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+            const base = audioCtx.currentTime + 0.05;
+            for (let i = 0; i < count; i++) {
+                // full alarm rises from quiet (0.05) to loud (0.7) so it never startles
+                const peak = soft ? 0.15 : 0.05 * Math.pow(14, i / (count - 1));
+                chime(base + i * CHIME_GAP, peak);
+            }
+        }
+
+        // A buzz with every chime (the only alert in vibration-only mode)
+        for (let i = 0; i < count; i++) {
+            alarmTimers.push(setTimeout(buzz, i * CHIME_GAP * 1000));
         }
     }
 
     function stopAlarm() {
         alarmNodes.forEach(osc => { try { osc.stop(); } catch (e) { /* already stopped */ } });
         alarmNodes = [];
+        alarmTimers.forEach(clearTimeout);
+        alarmTimers = [];
     }
+
+    /* ---------- Night log: every timer is recorded automatically ---------- */
+    // Entry: { s: start, e: end or null, r: 'done' | 'stopped' | null (still open),
+    //          p: time it was paused, d: day, i: interval, m: minutes }
+    const LOG_KEY = 'nightLog';
+    const LOG_MAX = 400;
+    const SESSION_GAP_MS = 3 * 60 * 60 * 1000;   // a longer gap starts a new session
+    let logClearArmed = false;
+    let logClearTimer = null;
+
+    function parseLog(raw) {
+        try {
+            const arr = JSON.parse(raw);
+            if (!Array.isArray(arr)) return [];
+            const clean = arr.filter(e => e && Number.isFinite(e.s));
+            // Only the newest entry may still be open
+            clean.forEach((e, idx) => {
+                if (e.e == null && idx < clean.length - 1) {
+                    e.e = e.p || e.s;
+                    e.r = 'stopped';
+                    delete e.p;
+                }
+            });
+            return clean;
+        } catch (err) { return []; }
+    }
+
+    function persistLog() {
+        if (nightLog.length > LOG_MAX) nightLog = nightLog.slice(-LOG_MAX);
+        saveKey(LOG_KEY, JSON.stringify(nightLog));
+    }
+
+    function openEntry() {
+        const last = nightLog[nightLog.length - 1];
+        return last && last.e == null ? last : null;
+    }
+
+    function closeOpenEntry(result, atMs) {
+        const entry = openEntry();
+        if (!entry) return;
+        entry.e = atMs || entry.p || Date.now();
+        entry.r = result;
+        delete entry.p;
+        persistLog();
+    }
+
+    function logStart() {
+        closeOpenEntry('stopped');   // tidy up anything left open from before
+        nightLog.push({
+            s: Date.now(), e: null, r: null,
+            d: selectedDay, i: selectedCheckIn, m: Math.round(totalSeconds / 60)
+        });
+        persistLog();
+    }
+
+    function fmtTime(ms) {
+        return new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+    function fmtDate(ms) {
+        return new Date(ms).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+
+    function el(tag, className, text) {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text != null) node.textContent = text;
+        return node;
+    }
+
+    function groupSessions() {
+        const sessions = [];
+        let lastEnd = 0;
+        nightLog.forEach(e => {
+            if (!sessions.length || e.s - lastEnd > SESSION_GAP_MS) sessions.push([]);
+            sessions[sessions.length - 1].push(e);
+            lastEnd = e.e || e.p || e.s;
+        });
+        return sessions;
+    }
+
+    function resultText(e) {
+        if (e.r === 'done') return 'Check-in ' + fmtTime(e.e);
+        if (e.r === 'stopped') return 'Stopped ' + fmtTime(e.e);
+        return isRunning ? 'Running' : 'Paused';
+    }
+
+    function renderLog() {
+        logBody.textContent = '';
+        if (!nightLog.length) {
+            logBody.appendChild(el('p', 'log-empty',
+                'Nothing logged yet. Each timer you start is recorded here automatically, so you can see how a night went.'));
+            logClear.disabled = true;
+            return;
+        }
+        logClear.disabled = false;
+
+        groupSessions().reverse().forEach(session => {
+            const wrap = el('section', 'log-session');
+            const checkIns = session.filter(e => e.r === 'done').length;
+            const early = session.filter(e => e.r === 'stopped').length;
+            let summary = checkIns + (checkIns === 1 ? ' check-in' : ' check-ins');
+            if (early) summary += ', ' + early + ' stopped early';
+
+            const head = el('div', 'log-session-head');
+            head.appendChild(el('div', 'log-session-title', fmtDate(session[0].s)));
+            head.appendChild(el('div', 'log-session-sum', summary));
+            wrap.appendChild(head);
+
+            session.forEach(e => {
+                const row = el('div', 'log-row');
+                row.appendChild(el('span', 'log-time', fmtTime(e.s)));
+                row.appendChild(el('span', 'log-detail',
+                    'Day ' + e.d + ' · ' + (INTERVAL_NAMES[e.i - 1] || '') + ' · ' + e.m + ' min'));
+                row.appendChild(el('span', 'log-result', resultText(e)));
+                wrap.appendChild(row);
+            });
+            logBody.appendChild(wrap);
+        });
+    }
+
+    function openLog() {
+        if (activeSheet) return;
+        logSheet.classList.toggle('show-timer', isRunning);
+        renderLog();
+        logBody.scrollTop = 0;
+        showSheet(logSheet, logBtn);
+        logSheet.focus();
+    }
+
+    function disarmLogClear() {
+        logClearArmed = false;
+        clearTimeout(logClearTimer);
+        logClear.textContent = 'Clear log';
+    }
+
+    logBtn.addEventListener('click', openLog);
+    $('logClose').addEventListener('click', closeSheet);
+    $('logDone').addEventListener('click', closeSheet);
+
+    // Clear needs a second tap within 3 seconds; a timer still in progress is kept
+    logClear.addEventListener('click', () => {
+        if (!nightLog.length) return;
+        if (!logClearArmed) {
+            logClearArmed = true;
+            logClear.textContent = 'Tap again to clear';
+            logClearTimer = setTimeout(disarmLogClear, 3000);
+            return;
+        }
+        disarmLogClear();
+        const open = openEntry();
+        nightLog = open ? [open] : [];
+        persistLog();
+        renderLog();
+    });
+
+    /* ---------- Editable wait times ---------- */
+    function parseTimes(raw) {
+        const out = cloneTimes(ferberMatrix);
+        try {
+            const obj = JSON.parse(raw);
+            for (let d = 1; d <= 7; d++) {
+                for (let i = 1; i <= 4; i++) {
+                    const v = Number(obj && obj[d] && obj[d][i]);
+                    if (Number.isInteger(v) && v >= 1 && v <= MAX_WAIT) out[d][i] = v;
+                }
+            }
+        } catch (err) { /* fall back to the built-in times */ }
+        return out;
+    }
+
+    function saveTimes() {
+        const next = cloneTimes(waitTimes);
+        let firstBad = null;
+        waitTableBody.querySelectorAll('.wait-input').forEach(inp => {
+            const raw = inp.value.trim();
+            const v = Number(raw);
+            const ok = raw !== '' && Number.isInteger(v) && v >= 1 && v <= MAX_WAIT;
+            inp.setAttribute('aria-invalid', ok ? 'false' : 'true');
+            if (ok) next[inp.dataset.day][inp.dataset.i] = v;
+            else if (!firstBad) firstBad = inp;
+        });
+        if (firstBad) {
+            timesError.textContent = 'Enter whole minutes from 1 to ' + MAX_WAIT + '.';
+            timesError.hidden = false;
+            firstBad.focus();
+            return;
+        }
+        waitTimes = next;
+        if (isCustomTimes()) saveKey('waitTimes', JSON.stringify(waitTimes)); else removeKey('waitTimes');
+        editingTimes = false;
+        // Refresh the display only when the timer is idle and untouched. A paused or finished
+        // timer keeps what it shows; the new times apply from the next Start or interval tap.
+        if (!isRunning && !isFinished && remainingMs === totalSeconds * 1000) applySetting();
+        renderWaitTable();
+    }
+
+    function restoreDefaultTimes() {
+        waitTableBody.querySelectorAll('.wait-input').forEach(inp => {
+            inp.value = ferberMatrix[inp.dataset.day][inp.dataset.i];
+            inp.removeAttribute('aria-invalid');
+        });
+        timesError.hidden = true;
+    }
+
+    timesEdit.addEventListener('click', () => {
+        if (isRunning) return;
+        editingTimes = true;
+        timesError.hidden = true;
+        renderWaitTable();
+        const first = waitTableBody.querySelector('.wait-input');
+        if (first) first.focus();
+    });
+    $('timesSave').addEventListener('click', saveTimes);
+    $('timesDefaults').addEventListener('click', restoreDefaultTimes);
+    $('timesCancel').addEventListener('click', () => {
+        editingTimes = false;
+        renderWaitTable();
+    });
+    waitTableBody.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('wait-input')) {
+            e.preventDefault();
+            saveTimes();
+        }
+    });
 
     /* ---------- Resync when the app returns to the foreground ---------- */
     document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
@@ -1116,10 +1620,13 @@
 
     /* ---------- Init: restore saved settings and any in-progress run ---------- */
     async function init() {
-        const [theme, muted, day, checkin, savedEnd, savedScript, savedSize] = await Promise.all([
-            loadKey('theme'), loadKey('muted'), loadKey('day'), loadKey('checkin'), loadKey('endTime'),
-            loadKey('script'), loadKey('scriptSize')
+        const [theme, savedMode, legacyMuted, day, checkin, savedEnd, savedScript, savedSize, savedTimes, savedLog] = await Promise.all([
+            loadKey('theme'), loadKey('alarmMode'), loadKey('muted'), loadKey('day'), loadKey('checkin'), loadKey('endTime'),
+            loadKey('script'), loadKey('scriptSize'), loadKey('waitTimes'), loadKey('nightLog')
         ]);
+
+        waitTimes = parseTimes(savedTimes);
+        nightLog = parseLog(savedLog);
 
         scriptText = savedScript || '';
         const sz = Number(savedSize);
@@ -1129,7 +1636,8 @@
 
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
         setTheme(theme || (prefersDark ? 'dark' : 'light'), false);
-        setMuted(muted === 'true', false);
+        // The old mute setting meant vibration only, so keep that behaviour for existing users
+        setAlarmMode(savedMode || (legacyMuted === 'true' ? 'vibrate' : 'sound'), false);
 
         const d = Number(day), c = Number(checkin);
         if (d >= 1 && d <= 7) { selectedDay = d; highlight(dayButtons, 'day', d); }
@@ -1148,7 +1656,7 @@
                 tickInterval = setInterval(tick, 250);
                 tick();
             } else {
-                finish(false); // finished while away; the notification already alerted them
+                finish('none', end); // finished while away; the notification already alerted them
             }
         }
     }

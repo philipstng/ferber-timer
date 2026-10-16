@@ -11,14 +11,7 @@ android {
                 storePassword MY_APP_UPLOAD_STORE_PASSWORD
                 keyAlias MY_APP_UPLOAD_KEY_ALIAS
                 keyPassword MY_APP_UPLOAD_KEY_PASSWORD
-            }
-
-            // (Optional but recommended) Removes unused resources to reduce APK/AAB size
-            shrinkResources true
-            
-            // Points to your ProGuard/R8 rules files
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            
+            }            
         }
     }
 
@@ -36,6 +29,9 @@ android {
             signingConfig signingConfigs.release
             // Enables R8 code shrinking, optimization, and obfuscation            
             minifyEnabled true
+            // (Optional but recommended) Removes unused resources to reduce APK/AAB size
+            shrinkResources true
+            // Points to your ProGuard/R8 rules files
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }

@@ -13,9 +13,6 @@ android {
                 keyPassword MY_APP_UPLOAD_KEY_PASSWORD
             }
 
-            // Enables R8 code shrinking, optimization, and obfuscation
-            minifyEnabled true
-            
             // (Optional but recommended) Removes unused resources to reduce APK/AAB size
             shrinkResources true
             
@@ -37,7 +34,8 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
-            minifyEnabled false
+            // Enables R8 code shrinking, optimization, and obfuscation            
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }

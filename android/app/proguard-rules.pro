@@ -19,3 +19,22 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep data models and serialization classes
+-keep class com.yourdomain.yourapp.models.** { *; }
+
+# Keep libraries that use reflection (Example: Gson)
+-keepattributes *Annotation*, Signature, InnerClasses, EnclosingMethod
+-keep class sun.misc.Unsafe { *; }
+-keep class com.google.gson.** { *; }
+-dontwarn com.google.gson.**
+
+# If using Retrofit
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class com.yourdomain.yourapp.network.** { *; }
+
+# Keep native methods if using JNI/NDK
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
